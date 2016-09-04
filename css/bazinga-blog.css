@@ -420,27 +420,19 @@ pre code {
 @media only screen and (min-width: 768px) {
   .navbar-custom {
     background: transparent;
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px solid #ddd;
   }
   .navbar-custom body {
     font-size: 20px;
   }
   .navbar-custom .navbar-brand {
-    color: white;
+    color: #000;
     padding: 20px;
     line-height: 20px;
   }
-  .navbar-custom .navbar-brand:hover,
-  .navbar-custom .navbar-brand:focus {
-    color: rgba(255, 255, 255, 0.8);
-  }
   .navbar-custom .nav li a {
-    color: white;
+    color: #0645AD;
     padding: 20px;
-  }
-  .navbar-custom .nav li a:hover,
-  .navbar-custom .nav li a:focus {
-    color: rgba(255, 255, 255, 0.8);
   }
   .navbar-custom .nav li a:active {
     background: none;
