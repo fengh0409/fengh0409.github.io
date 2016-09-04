@@ -6,7 +6,7 @@ email: fengh0409@gmail.com
 description: "冯辉个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源"
 keyword: "冯辉, Bazingafeng, 冯辉个人博客, Blog, PHP, Web服务器"
 url: "http://fengh0409.github.io/"              # your host, for absolute URL
-baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+baseurl: "/fengh0409.github.io"                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 
 
