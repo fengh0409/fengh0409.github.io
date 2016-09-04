@@ -1,0 +1,88 @@
+# Site settings
+title: Feng's Blog
+SEOTitle: Bazingafeng 的个人博客
+header-img: img/home-bg.jpg
+email: fengh0409@gmail.com
+description: "冯辉个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源"
+keyword: "冯辉, Bazingafeng, 冯辉个人博客, Blog, PHP, Web服务器"
+url: "http://bazingafeng"              # your host, for absolute URL
+baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+
+
+
+# SNS settings
+RSS: false
+github_username:  fengh0409  
+# linkedin_username:  firstname-lastname-idxxxx
+
+
+
+# Build settings
+# from 2016, 'pygments' is unsupported on GitHub Pages. Use 'rouge' for highlighting instead.
+highlighter: rouge
+permalink: pretty
+paginate: 10
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md"]
+anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
+
+
+
+# Gems
+# from PR#40, to support local preview for Jekyll 3.0
+gems: [jekyll-paginate]
+
+
+
+# Markdown settings
+# replace redcarpet to kramdown,
+# although redcarpet can auto highlight code, the lack of header-id make the catalog impossible, so I switch to kramdown
+# document: http://jekyllrb.com/docs/configuration/#kramdown
+markdown: kramdown
+kramdown:
+  input: GFM                            # use Github Flavored Markdown !important
+
+
+
+# Disqus settings
+#disqus_username: _your_disqus_short_name_
+
+# Duoshuo settings
+duoshuo_username: bazingafeng
+# Share component is depend on Comment so we can NOT use share only.
+duoshuo_share: true                     # set to false if you want to use Comment without Sharing
+
+
+
+
+# Analytics settings
+# Baidu Analytics
+ba_track_id: e4dff51b788b7af84843be648c3c409d
+# Google Analytics, because Google has been walled, so I am not using the analytics
+# ga_track_id: ''            # Format: UA-xxxxxx-xx
+# ga_domain: bazingafeng.com 
+
+
+
+# Sidebar settings
+sidebar: true                           # whether or not using Sidebar.
+sidebar-about-description: "Bazingafeng,24 years old,an PHP Engineer,working in 10jqka at Hangzhou."
+sidebar-avatar: /img/avatar-bazinga.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+
+
+
+# Featured Tags
+featured-tags: true                     # whether or not using Feature-Tags
+featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
+
+
+
+# Friends
+#friends: [
+#    {
+#        title: "阮一峰",
+#        href: "http://www.ruanyifeng.com"
+#    },{
+#        title: "酷壳",
+#        href: "http://coolshell.cn"
+#    }
+#]
