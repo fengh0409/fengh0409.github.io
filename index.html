@@ -1,7 +1,5 @@
 ---
 layout: page
-description: "一生俯首拜阳明"
-css_index: true
 ---
 
 {% for post in paginator.posts %}
@@ -10,11 +8,6 @@ css_index: true
         <h2 class="post-title">
             {{ post.title }}
         </h2>
-        {% if post.subtitle %}
-        <h3 class="post-subtitle">
-            {{ post.subtitle }}
-        </h3>
-        {% endif %}
         <div class="post-content-preview">
             {{ post.content | strip_html | truncate:200 }}
         </div>

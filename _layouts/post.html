@@ -2,11 +2,6 @@
 layout: default
 ---
 
-<!-- Image to hack wechat -->
-<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
-<!-- <img src="{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}" width="0" height="0"> -->
-
-
 <!-- Post Content -->
 <article>
     <div class="container">
@@ -17,8 +12,8 @@ layout: default
                 col-lg-9 col-lg-offset-1
                 col-md-10 col-md-offset-1
                 post-container">
-                <h1 class="text-center">{{ page.title }}</h1>
-                <p style="font-family: Lora,'Times New Roman',serif;font-style: italic;font-weight: 300;margin-top:15px;">Posted by {{ page.author }} on {{ page.date | date:"%B %-d, %Y"}}</p>
+                <div class="article-title text-center">{{ page.title }}</div>
+                <p class="text-right" style="font-family: Lora,'Times New Roman',serif;font-style: italic;font-weight: 300;margin-top:0;">{{ page.date | date:"%B %-d, %Y"}}</p>
 				{{ content }}
 
                 <hr>

@@ -228,6 +228,11 @@ pre code {
 .postlist-container {
   margin-bottom: 15px;
 }
+.article-title {
+  margin: 30px 0 10px;
+  font-size:36px;
+  font-weight:bold;
+}
 .post-container a {
   color: #337ab7;
 }
@@ -407,6 +412,9 @@ pre code {
   font-weight: 800;
   letter-spacing: 1px;
 }
+.navbar-custom .nav li a:hover {
+    color:#0085a1;
+}
 .navbar-custom .nav li a:active {
   background: rgba(0, 0, 0, 0.12);
 }
@@ -425,7 +433,7 @@ pre code {
     font-size: 22px;
   }
   .navbar-custom .nav li a {
-    color: #0645AD;
+    color: #000;
     padding: 20px;
   }
   .navbar-custom .nav li a:active {
@@ -984,7 +992,6 @@ img::-moz-selection {
 .navbar-default .navbar-toggle .icon-bar {
   width: 18px;
   border-radius: 0px;
-  background-color: white;
 }
 .navbar-default .navbar-toggle .icon-bar + .icon-bar {
   margin-top: 3px;
