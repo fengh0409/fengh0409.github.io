@@ -1,6 +1,8 @@
 ---
 layout:     post
 title:      "composer介绍与使用"
+keywords:   "composer,composer使用,autoload,自动加载" 
+description: "composer的介绍与使用，自动加载"
 date:       2016-10-27
 published:  true 
 catalog: true
