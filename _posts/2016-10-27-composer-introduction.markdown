@@ -1,8 +1,8 @@
 ---
 layout:     post
-title:      "composer介绍与使用"
-keywords:   "composer,composer使用,autoload,自动加载" 
-description: "composer的介绍与使用，自动加载"
+title:      "composer使用与原理分析"
+keywords:   "composer,composer使用,原理,autoload,自动加载" 
+description: "composer的使用和原理分析，自动加载"
 date:       2016-10-27
 published:  true 
 catalog: true
@@ -356,7 +356,7 @@ getCommon();        // 输出：you are calling getCommon method
 ```
 到这里，我们成功的定义了自动加载方式，并使用了它，我想现在大家应该很清楚了，composer的自动加载其实就是根据autoload的定义，将对应的映射关系写入各自的autoload_*.php中，然后require进来，就可以直接调用各个类中的方法了。建议大家亲自试试，对自动加载的更加容易理解。
 
-那么，我现在需要修改类库，比如在lib/下新增了一个类文件，现在能直接调用吗？不能，因为我们的autoload_*.php中并没有该类文件的映射，这时我们就要更新composer/下的autoload_*.php了，执行`composer dump-autoload`命令即可，这样我们就可以调用新增的类库文件了。
+那么，我现在需要修改类库，比如在lib/下新增了一个类文件，现在能直接调用吗?不能，因为我们的autoload_*.php中并没有该类文件的映射，这时我们就要更新composer/下的autoload_*.php了，执行`composer dump-autoload`命令即可，这样我们就可以调用新增的类库文件了。
 
 ## composer.json架构
 具体架构请参考官方文档，这里只讲解几个字段
