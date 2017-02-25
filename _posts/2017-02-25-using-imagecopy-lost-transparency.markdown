@@ -15,13 +15,13 @@ tags:
 我不知道是不是GD库和php版本的问题，php => 5.6.3，GD => bundled (2.1.0 compatible)。
 
 ## 问题重现
-我要给目标图片加上一个logo水印，根据以往的实现方法一般都是通过GD库的`imagecopymerge()`或`imagecopy()`函数来实现的，这两个函数的作用是一样的：拷贝并合并图像的一部分。
+我要给目标图片加上一个水印，根据以往的实现方法一般都是通过GD库的`imagecopymerge()`或`imagecopy()`函数来实现的，这两个函数的作用是一样的：拷贝并合并图像的一部分。
 
 这里简单介绍一下它们的区别：`imagecopymerge()`比`imagecopy()`多了一个参数$pct，这个参数用来设置水印的透明度，取值是从0到100的整数，值越大透明度越高。当$pct=0，即不透明，实际上什么也没做；当$pct=100时，表示完全透明，此时该函数和`imagecopy()`完全一样。<br>
 
-因为我的logo背景是完全透明的，所以我使用的是`imagecopy()`，也建议大家在添加背景完全透明的水印时使用此函数而不是`imagecopymerge()`。
+因为我的水印图背景是完全透明的，所以我使用的是`imagecopy()`，也建议大家在添加背景完全透明的水印时使用此函数而不是`imagecopymerge()`。
 
-logo图（png格式）：
+水印图（png格式）：
 ![Alt text](/img/2017/02/ths-logo.png)
 目标图片（gif格式）：
 ![Alt text](/img/2017/02/destination.PNG)
