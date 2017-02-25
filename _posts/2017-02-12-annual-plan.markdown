@@ -7,7 +7,6 @@ date: 2017-02-12
 published: true
 catalog: true
 tags:
-    - 计划
     - 生活
 ---
 
