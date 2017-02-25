@@ -97,7 +97,7 @@ header('Content-Type:image/png');
 exit;
 ```
 
-运行以上代码后，生成的图片在chrome、firefo、IE上显示效果都一样，如下：
+运行以上代码后，生成的图片在chrome、firefox、IE上显示效果都一样，如下：
 ![Alt text](/img/2017/02/IE.PNG)
 生成的图片显示效果比原来好多了，但并没有达到我的预期，水印背景仍然是不透明的，白色背景挡住了目标图像。
 wtf again!不应该啊，照上面的逻辑，水印图应该是透明背景才对啊，为什么是白色的？？我没想明白为什么，但我想到了`imagecopymerge()`，于是我尝试这将最后一步的`imagecopy()`换成`imagecopymerge()`，代码如下：
