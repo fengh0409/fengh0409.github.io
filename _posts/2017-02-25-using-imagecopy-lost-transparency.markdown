@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "php使用imagecopy()添加水印丢失透明度的问题"
+title:      "php使用imagecopy添加水印丢失透明度的问题"
 keywords:   "php,imagecopy,imagecopymerge,水印,透明度,transparent" 
 description: "使用imagecopy给图片添加水印丢失透明度的解决方案"
 date:       2017-02-25
@@ -11,13 +11,14 @@ tags:
 ---
 
 ## 问题描述
-最近在工作中遇到一个很奇怪的问题，在使用php GD库的`imagecopy()`给图片添加带有透明度的图片水印时，水印的透明度变得不透明了，而且在不同浏览器上查看加水印后的图片，显示效果也不一样。<br>
+最近在工作中遇到一个很奇怪的问题，在使用php GD库的`imagecopy()`给图片添加带有透明度的图片水印时，水印的透明度变得不透明了，而且在不同浏览器上查看加水印后的图片，显示效果也不一样。
+
 我不知道是不是GD库和php版本的问题，php => 5.6.3，GD => bundled (2.1.0 compatible)。
 
 ## 问题重现
 我要给目标图片加上一个水印，根据以往的实现方法一般都是通过GD库的`imagecopymerge()`或`imagecopy()`函数来实现的，这两个函数的作用是一样的：拷贝并合并图像的一部分。
 
-这里简单介绍一下它们的区别：`imagecopymerge()`比`imagecopy()`多了一个参数$pct，这个参数用来设置水印的透明度，取值是从0到100的整数，值越大透明度越高。当$pct=0，即不透明，实际上什么也没做；当$pct=100时，表示完全透明，此时该函数和`imagecopy()`完全一样。<br>
+这里简单介绍一下它们的区别：`imagecopymerge()`比`imagecopy()`多了一个参数$pct，这个参数用来设置水印的透明度，取值是从0到100的整数，值越大透明度越高。当$pct=0，即不透明，实际上什么也没做；当$pct=100时，表示完全透明，此时该函数和`imagecopy()`完全一样。
 
 因为我的水印图背景是完全透明的，所以我使用的是`imagecopy()`，也建议大家在添加背景完全透明的水印时使用此函数而不是`imagecopymerge()`。
 
