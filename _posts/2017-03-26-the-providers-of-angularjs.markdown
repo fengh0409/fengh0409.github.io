@@ -8,8 +8,6 @@ published:  true
 catalog: true
 tags:
     - javascript 
-    - angularjs 
-    - providers 
 ---
 
 最近因为工作需要接触到了AngularJS，在看到Providers的时候很迷惑，对factory、service和 provider 不太理解，也不知道什么时候该用哪一个来创建服务，后面通过阅读文档和查阅大量资料才弄清楚，所以在这里记录一下他们的用法和区别。

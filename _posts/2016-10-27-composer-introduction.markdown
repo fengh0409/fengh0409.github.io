@@ -7,7 +7,6 @@ date:       2016-10-27
 published:  true 
 catalog: true
 tags:
-    - composer 
     - php 
 ---
 
