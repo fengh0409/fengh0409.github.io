@@ -47,4 +47,39 @@ RUN apt-get update && apt-get install -y \
 #### 构建缓存
 在构建镜像的过程中，Docker将按照指定的顺序逐步执行Dockerfile中的指令。随着每条指令的检查，Docker将在其缓存中查找可以重用的现有镜像，而不是创建一个新的（重复）镜像。如果你不想使用缓存，可以在`docker build`命令中使用`--no-cache = true`选项。
 
-但是，如果你确实要让Docker使用其缓存，那么了解何时会找到匹配的镜像是非常重要的。 Docker查找镜像缓存时将遵循的基本规则如下：
+但是，如果你确实要让Docker使用其缓存，那么了解何时会找到匹配的镜像是非常重要的。 Docker查找镜像缓存时将遵循以下基本原则：
+* 从已经存在缓存中的基础镜像开始，将下一个指令与从该基础镜像导出的所有子镜像进行比较，看其中是否有使用完全相同指令构建的子镜像，如果没有，则缓存无效。
+* 在大多数情况下，只需将`Dockerfile`中的指令与其中一个子镜像比较即可。但是，某些指令需要更多的检查和解释。
+* 对于`ADD`和`COPY`指令，将检查镜像中文件的内容，并计算每个文件的校验和，在这些校验和中不考虑文件的最后修改时间和最后访问时间。在查找镜像缓存时，将校验和与现有镜像的校验和进行比较，如果文件（如内容和元数据）中有任何变化，则缓存无效。
+* 除了`ADD`和`COPY`命令以外，检查缓存时将不会查看容器中的文件来确定缓存是否匹配。例如，在处理`RUN apt-get -y update`命令时，将不会检查在容器中更新的文件来确定是否命中缓存。在这种情况下，只需要通过命令字符串本身来查找匹配的缓存。
+
+一旦缓存无效，则所有后续的Dockerfile指令将不再使用缓存，而是重新生成新的子镜像。
+
+## Dockerfile指令
+接下来的内容是关于在Dockerfile中使用各个指令的最佳方式。
+
+#### FROM
+尽可能的使用官方镜像作为你的基础镜像，
+
+#### LABEL
+你可以为镜像添加标签，这有助于你按项目组织图像、记录许可信息、自动化或其他原因。对于每个标签，添加一个以LABEL开头的行和一个或多个键值对。
+> **注意：**如果你的字符串包含空格，那么你必须使用引号来包裹或者对空格进行转义，如果字符串内部包含引号，也要进行转义。
+```
+# 设置一个或多个标签
+LABEL com.example.version="0.0.1-beta"
+LABEL vendor="ACME Incorporated"
+LABEL com.example.release-date="2015-02-12"
+LABEL com.example.version.is-production=""
+
+# 在一行设置设置多个标签
+LABEL com.example.version="0.0.1-beta" com.example.release-date="2015-02-12"
+
+# 一次设置多个标签，使用`\`符号来连接
+LABEL vendor=ACME\ Incorporated \
+      com.example.is-beta= \
+      com.example.is-production="" \
+      com.example.version="0.0.1-beta" \
+      com.example.release-date="2015-02-12"
+```
+
+#### RUN
