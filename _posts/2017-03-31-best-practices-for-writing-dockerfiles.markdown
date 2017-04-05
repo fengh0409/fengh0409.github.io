@@ -140,3 +140,38 @@ RUN apt-get update && apt-get install -y \
 && rm -rf /var/lib/apt/lists/*
 ```
 
+s3cmd指令指定1.1.\*版本。如果镜像以前使用的是老版本，则指定新版本会破坏`apt-get update`镜像层缓存，并确保新版本的安装。
+
+另外，通过删除`/var/lib/apt/lists`清理apt缓存，因此apt缓存不会存储于镜像层中，也就减小了镜像大小。由于RUN语句以`apt-get update`开头，所以在缓存apt-get之前，包缓存将始终被刷新。
+
+#### CMD
+CMD指令被用于运行包含在镜像中的软件和参数，CMD几乎总是以`CMD [“executable”, “param1”, “param2”…]`的形式使用。因此，如果镜像应用于服务，例如Apache和Rails，则可以像这样`CMD [“apache2”，“-DFOREGROUND”]`运行。实际上，这种形式的指令是推荐用于任何基于服务的镜像。
+
+在大多数其他情况下，应该给CMD一个交互式的shell，比如bash，python和perl。例如，`CMD ["perl", "-de0"]`, `CMD ["python"]`或`CMD [“php”, “-a”]`，使用这种形式意味着当你执行像`docker run -it python`这样的操作时，进入容器后将处于可用的shell中。CMD应该很少以`CMD [“param”，“param”]`的形式与ENTRYPOINT一起使用，除非你已经非常熟悉ENTRYPOINT的工作原理。
+
+#### ADD或COPY
+虽然`ADD`和`COPY`在功能上相似，但通常优先使用`COPY`，因为它比`ADD`更直观。`COPY`只支持将本地文件复制到容器中，而`ADD`具有一些隐藏的功能（如本地的tar提取和远程URL支持），因此，`ADD`最适合用于将本地tar文件自动提取到镜像中，如`ADD rootfs.tar.xz /`。
+
+如果你的`Dockerfile`需要使用上下文中的多个文件，请单独使用`COPY`多次，而不是一次，因为如果指定的文件更改了，这可以确保每一步的构建缓存失效（即强制重新构建）。
+
+由于镜像大小很重要，因此不应该使用`ADD`从远程URL获取包，你应该使用`curl`或`wget`来代替，这样你就可以删除在解压后不再需要的文件，而不必在镜像中添加另一个镜像层。例如，你不应这样做：
+```ruby
+ADD http://example.com/big.tar.xz /usr/src/things/
+RUN tar -xJf /usr/src/things/big.tar.xz -C /usr/src/things
+RUN make -C /usr/src/things all
+```
+而应该使用下面的方式来代替：
+```ruby
+RUN mkdir -p /usr/src/things \
+    && curl -SL http://example.com/big.tar.xz \
+    | tar -xJC /usr/src/things \
+    && make -C /usr/src/things all
+```
+
+对于不需要`ADD`自动提取功能的一些项目（如文件，目录），应该始终使用`COPY`指令。
+
+#### VOLUME
+
+#### USER
+#### WORKDIR
+#### ONBUILD
