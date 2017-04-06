@@ -1,9 +1,9 @@
 ---
 layout:     post
-title:      "编写dockerfiles最佳实践"
+title:      "编写dockerfiles最佳实践（译）"
 keywords:   "dockerfile,最佳实践,经验" 
 description: "编写dockerfiles最佳实践"
-date:       2017-03-31
+date:       2017-04-06
 published: true
 catalog: true
 tags:
@@ -60,10 +60,10 @@ RUN apt-get update && apt-get install -y \
 接下来的内容是关于在`Dockerfile`中使用各个指令的最佳方式（只列出了一些有用的部分）。
 
 #### FROM
-尽可能的使用官方镜像作为你的基础镜像。
+尽可能的使用官方镜像作为基础镜像。
 
 #### LABEL
-你可以为镜像添加标签，这有助于你按项目组织图像、记录许可信息、自动化或其他原因。对于每个标签，添加一个以LABEL开头的行和一个或多个键值对。
+你可以为镜像添加标签，这将为你按项目组织镜像、记录许可信息、自动化等起到帮助。每个标签可以添加一个以`LABEL`开头的行和一个或多个键值对。
 
 > **注意：**如果你的字符串包含空格，那么你必须使用引号来包裹或者对空格进行转义，如果字符串内部包含引号，也要进行转义。
 
@@ -86,35 +86,37 @@ LABEL vendor=ACME\ Incorporated \
 ```
 
 #### RUN
-通常来讲，为了使`Dockerfile`更易阅读、易于理解、容易维护，可以使用反斜杠`\`将一行复杂的`RUN`命令分隔成多行。
+通常来讲，为了使`Dockerfile`更易阅读、易于理解、容易维护，请使用反斜杠`\`将一行复杂的`RUN`命令分隔成多行。
 
 #### APT-GET
-可能`RUN`指令最常用的情形是应用程序的`apt-get`，因为`RUN apt-get`命令是用来安装软件包的，所以有几个地方需要注意一下。
+`RUN`指令最常用的情形应该是应用程序的`apt-get`，在使用`RUN apt-get`命令安装软件包时，有几个地方需要注意一下。
 
-你应该避免使用`RUN apt-get upgrade`或`dist-upgrade`，因为基础镜像中的许多必需软件包无法在unprivileged容器内升级。如果基础镜像中包含的软件包过期了，你应该联系该镜像的维护人员。如果你知道有一个特定的包需要更新，请使用`apt-get install -y`命令来自动更新。
+你应该避免使用`RUN apt-get upgrade`或`dist-upgrade`，因为基础镜像中的许多必需软件包无法在无权限容器内升级。如果基础镜像中包含的软件包过期了，你应该联系该镜像的维护人员。如果你知道有一个特定的包需要更新，请使用`apt-get install -y`来自动更新。
 
-请务必将`RUN apt-get update`与`apt-get install`组合在同一个RUN语句中，例如：
+请务必将`RUN apt-get update`与`apt-get install`组合在同一个`RUN`语句中，例如：
 ```ruby
 RUN apt-get update && apt-get install -y \
     package-bar \
     package-baz \
     package-foo
 ```
-在`RUN`语句中单独使用`apt-get update`会导致缓存问题，并且其后的`apt-get install`指令会失败。例如，假如你有这样一个Dockerfile文件：
+
+在`RUN`语句中单独使用`apt-get update`会导致缓存问题，并且其后的`apt-get install`指令会失败。例如，假设你有这样一个`Dockerfile`文件：
 ```ruby
 FROM ubuntu:14.04
 RUN apt-get update
 RUN apt-get install -y curl
 ```
-构建镜像后，所有镜像层都已经缓存到Docker中，假设你以后要修改Dockerfile中的`apt-get install`来安装其他的包：
+
+构建镜像后，所有镜像层都已经缓存到Docker中，假设你以后要修改`Dockerfile`中的`apt-get install`来安装其他的包：
 ```ruby
 FROM ubuntu:14.04
 RUN apt-get update
 RUN apt-get install -y curl nginx
 ```
-Docker会把最初的`apt-get update`和修改后的`apt-get update`当做同样的指令，并且使用之前的缓存镜像，所以`apt-get update`不会执行。因为`apt-get update`没有执行，所以你可能会安装比较旧的curl和nginx包版本。
+Docker会把最初的`apt-get update`和修改后的`apt-get update`当做同样的指令，并且使用之前的缓存镜像，导致`apt-get update`不会执行，所以可能会安装比较旧的curl和nginx包版本。
 
-使用`RUN apt-get update && apt-get install -y`可确保安装最新的软件包版本，无需进一步的编码或手动干预，这种方式被称为`缓存破解`。你也可以通过一种叫做`版本锁定`的方式来指定包版本以达到同样的目的，例如：
+而使用`RUN apt-get update && apt-get install -y`可确保安装的软件包版本是最新的，无需进一步的编码或手动干预，这种方式被称为`缓存破解`。你也可以通过一种叫做`版本锁定`的方式来指定包版本以达到同样的目的，例如：
 ```ruby
 RUN apt-get update && apt-get install -y \
     package-bar \
@@ -141,21 +143,24 @@ RUN apt-get update && apt-get install -y \
 && rm -rf /var/lib/apt/lists/*
 ```
 
-s3cmd指令指定1.1.\*版本。如果镜像以前使用的是老版本，则指定新版本会破坏`apt-get update`镜像层缓存，并确保新版本的安装。
+s3cmd指令指定了1.1.\*版本。如果镜像以前使用的是老版本，则指定新版本会让`apt-get update`镜像层缓存失效，并确保新版本的安装。
 
-另外，通过删除`/var/lib/apt/lists`清理apt缓存，因此apt缓存不会存储于镜像层中，也就减小了镜像大小。由于RUN语句以`apt-get update`开头，所以在缓存apt-get之前，包缓存将始终被刷新。
+另外，通过删除`/var/lib/apt/lists`可以清理apt缓存，因此apt缓存不会存储于镜像层中，也就减小了镜像大小。由于`RUN`语句以`apt-get update`开头，所以在执行`apt-get install`之前，包缓存将始终被刷新。
 
 #### CMD
-CMD指令被用于运行包含在镜像中的软件和参数，CMD几乎总是以`CMD [“executable”, “param1”, “param2”…]`的形式使用。因此，如果镜像应用于服务，例如Apache和Rails，则可以像这样`CMD [“apache2”，“-DFOREGROUND”]`运行。实际上，这种形式的指令是推荐用于任何基于服务的镜像。
+`CMD`指令被用于运行包含在镜像中的软件和参数，它几乎总是以`CMD [“executable”, “param1”, “param2”…]`的形式调用。因此，对于服务类型的镜像，例如Apache和Rails，则可以这样运行`CMD [“apache2”，“-DFOREGROUND”]`。实际上，这种形式的指令也是推荐用于任何基于服务的镜像的。
 
-在大多数其他情况下，应该给CMD一个交互式的shell，比如bash，python和perl。例如，`CMD ["perl", "-de0"]`, `CMD ["python"]`或`CMD [“php”, “-a”]`，使用这种形式意味着当你执行像`docker run -it python`这样的操作时，进入容器后将处于可用的shell中。CMD应该很少以`CMD [“param”，“param”]`的形式与ENTRYPOINT一起使用，除非你已经非常熟悉ENTRYPOINT的工作原理。
+在大多数情况下，应该给`CMD`一个交互式的shell，如bash，python和perl。例如，`CMD ["perl", "-de0"]`, `CMD ["python"]`或`CMD [“php”, “-a”]`，使用这种形式就意味着当你执行像`docker run -it python`这样的操作时，进入容器后将处于可用的shell中。尽量不要将`CMD`以`CMD [“param”，“param”]`的形式与`ENTRYPOINT`一起使用，除非你非常熟悉`ENTRYPOINT`的工作原理。
+
+#### EXPOSE
+`EXPOSE`指令指明容器将监听用于连接的端口，因此，你应该为应用程序使用通用的、默认的端口，例如，包含Apache web服务器的镜像应该使用`EXPOSE 80`，而包含MongoDB的镜像应该使用`EXPOSE 27017`等。
 
 #### ADD或COPY
 虽然`ADD`和`COPY`在功能上相似，但通常优先使用`COPY`，因为它比`ADD`更直观。`COPY`只支持将本地文件复制到容器中，而`ADD`具有一些隐藏的功能（如本地的tar提取和远程URL支持），因此，`ADD`最适合用于将本地tar文件自动提取到镜像中，如`ADD rootfs.tar.xz /`。
 
-如果你的`Dockerfile`需要使用上下文中的多个文件，请单独使用`COPY`多次，而不是一次，因为如果指定的文件更改了，这可以确保每一步的构建缓存失效（即强制重新构建）。
+如果你的`Dockerfile`需要使用上下文中的多个文件，请单独使用`COPY`多次，而不是一次`COPY`，因为如果指定的文件更改了，这可以确保每一步的构建缓存失效（即强制重新构建）。
 
-由于镜像大小很重要，因此不应该使用`ADD`从远程URL获取包，你应该使用`curl`或`wget`来代替，这样你就可以删除在解压后不再需要的文件，而不必在镜像中添加另一个镜像层。例如，你不应这样做：
+由于镜像大小很重要，因此不应该使用`ADD`从远程URL获取包，而应该用`curl`或`wget`来代替，这样你就可以删除在解压后不再需要的文件，也就不会在镜像中添加另一个镜像层。例如，你不应这样做：
 ```ruby
 ADD http://example.com/big.tar.xz /usr/src/things/
 RUN tar -xJf /usr/src/things/big.tar.xz -C /usr/src/things
@@ -169,16 +174,18 @@ RUN mkdir -p /usr/src/things \
     && make -C /usr/src/things all
 ```
 
-对于不需要`ADD`自动提取功能的一些项目（如文件，目录），应该始终使用`COPY`指令。
+对于不需要用到`ADD`自动提取功能的一些项目（如文件，目录），应该始终使用`COPY`指令。
 
 #### USER
-如果一个服务可以没有特定权限运行，请使用`USER`指令来切换到非root用户，在`Dockerfile`中使用`RUN groupadd -r postgres && useradd -r -g postgres postgres`这样的形式来创建用户和组。
+如果一个服务可以在无特定权限下运行，请使用`USER`指令来切换到非root用户，如果要创建用户和组，在`Dockerfile`中请使用`RUN groupadd -r postgres && useradd -r -g postgres postgres`的形式来创建。
 
-你应该避免安装或使用`sudo`，因为一些无法预期的行为可能导致更多问题。如果你确实要使用类似于sudo的功能（例如，以root用户身份初始化守护程序，但以非root身份运行），则可以使用“gosu”。
+你应该避免安装或使用`sudo`，因为一些无法预期的行为可能会导致更多问题。如果你确实要使用类似于`sudo`的功能（例如，以root用户身份初始化守护程序，但以非root身份运行），则可以使用`gosu`。
 
-最后，为了减少镜像层和复杂性，请避免频繁地使用`USER`来切换。
+最后，为了减少镜像层和复杂性，不要频繁地使用`USER`切换用户。
 
 #### WORKDIR
-为了让`Dockerfile`看起来清晰可靠，你应该始终为`WORKDIR`使用绝对路径，而且，你应该使用`WORKDIR`，而不是像`RUN CD ... && do-something`这些难以阅读和维护的增量指令。
+为了让`Dockerfile`看起来清晰可靠，`WORKDIR`应该始终使用绝对路径，而且，你应该使用`WORKDIR`来切换目录，而不是像`RUN cd ... && do-something`这些难以阅读和维护的命令。
+
+本文译自官方文档：[Best practices for writing Dockerfiles](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/)，译者水平有限，有翻译差错请指正。
 
 （完）
