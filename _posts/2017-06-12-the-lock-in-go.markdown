@@ -224,35 +224,59 @@ import (
 
 func main() {
     var wg sync.WaitGroup
-    var urls = []string{
+    var str = []string{
         "Hello, World",
         "Hello, Go",
         "Bye, PHP",
     }
-    for _, url := range urls {
+    for _, s := range str {
         // Increment the WaitGroup counter.
         wg.Add(1)
-        // Launch a goroutine to fetch the URL.
-        go func(url string) {
+        // Launch a goroutine to read the str.
+        go func(s string) {
             // Decrement the counter when the goroutine completes.
             defer wg.Done()
-            // Println the URL.
-            read(url)
-        }(url)
+            // Println the s.
+            read(s)
+        }(s)
     }
     // Wait for all goroutine to complete.
     wg.Wait()
 }
 
-func read(url string) {
+func read(s string) {
     time.Sleep(time.Second * 1)
-    fmt.Println(url)
+    fmt.Println(s)
 }
 ```
 
 WaitGroup中存在一个计数器，其原理其实是通过这个计数器来实现的。Add接受一个int类型的参数，当传入正整数n时，计数器的值会增加n，当传入负整数n时，计数器的值会减少n；而当计数器的值等于0时，也就意味着所有goroutine执行完了，堵塞的Wait会被释放，WaitGroup的使命也就完成了。**注意：Wait释放之前，计数器的值不能为负，否则程序会panic掉。**
 
 上述例子中，main函数执行时，Wait会一直堵塞，for循环开始都会调用一次Add(1)，使计数器加一，每个goroutine执行完成后会调用Done，使计数器减一，这个Done其实是调用了Add(-1)，大家可以查看下源码。这样，整个for循环跑完后计数器的值肯定是0，也就是说所有goroutine执行完了，然后堵塞的Wait会被释放，后面的程序会继续执行。
+
+根据以上结论，我们也可以将wg.Add()写在for循环外面：
+```go
+func main() {
+    var wg sync.WaitGroup
+    var str = []string{
+        "Hello, World",
+        "Hello, Go",
+        "Bye, PHP",
+    }
+    // Increment the WaitGroup counter.
+    wg.Add(len(str))
+    for _, s := range str {
+        // Launch a goroutine to read the str.
+        go func(s string) {
+            // Decrement the counter when the goroutine completes.
+            defer wg.Done()
+            // Println the s.
+            read(s)
+        }(s)
+    }
+    wg.Wait()
+}
+```
 
 打印结果：
 ```go
