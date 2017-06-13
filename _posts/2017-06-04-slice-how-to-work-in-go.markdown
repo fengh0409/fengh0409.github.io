@@ -163,6 +163,13 @@ fmt.Println(summer[:10])
 
 运行程序时会发现报panic异常，咦，为什么这次没有扩展summer呢？其实是扩展了，但summer的容量只有7，所以只能将summer扩展到7个元素。**在go语言中，超出cap的切片操作将导致panic异常。**
 
+当获取一个切片时，若省略结束值，则其默认是切片的长度而不是容量；若指定结束元素，则可指定为容量：
+```go
+fmt.Println(summer[:])    // [June July August]
+fmt.Println(summer[:7])   // [June July August September October November December]
+fmt.Println(summer[:8])   // panic
+```
+
 #### Slice比较
 请看下面的例子，b和c切片取自同一个底层数组，然后比较他们是否相等
 ```go
