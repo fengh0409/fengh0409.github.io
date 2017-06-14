@@ -13,7 +13,7 @@ tags:
 go是一门并发特性非常强大的语言，我们在实现并发编程时，往往会碰到多个线程同时访问同一个变量的情况，也就是所谓的竞态，这个时候就需要对变量上锁，来保证一次只有一个线程能修改该变量，下面将详细介绍go的锁机制。
 
 ## sync
-go语言中的锁机制是通过自带的sync包来实现的，该包包含了几种锁类型，我们将一一介绍。
+go语言中的锁机制是通过自带的sync包来实现的，该包包含了以下几种锁类型。
 
 ## sync.Mutex
 Mutex是互斥锁，其定义方式很简单，先是定义了一个Mutex类型结构体，然后该类型实现了Lock()和Unlock()两个方法。
@@ -283,6 +283,90 @@ func main() {
 Hello, World
 Hello, Go
 Bye, PHP
+```
+
+## sync.Cond
+Cond的作用和WaitGroup是一样的，都是让goroutine堵塞，不同的是WaitGroup是被动堵塞，所有goroutine跑完后，wait会自动释放，而Cond是主动堵塞，我们必须给cond发送一个信号，来通知wait释放。
+```go
+type Cond struct {
+    noCopy noCopy
+
+    // L is held while observing or changing the condition
+    L Locker
+
+    notify  notifyList
+    checker copyChecker
+}
+
+func NewCond(l Locker) *Cond
+
+func (c *Cond) Signal()
+
+func (c *Cond) Broadcast()
+
+func (c *Cond) Wait()
+```
+
+通过Cond的定义方式可以看到，通过调用NewCond函数来获得一个Cond对象，每个Cond都关联一个Locker L（通常是一个\*Mutex或\*RWMutex），在更改条件和调用Wait方法时必须持有该Locker。
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+func main() {
+    locker := new(sync.Mutex)
+    cond := sync.NewCond(locker)
+    done := false
+
+    cond.L.Lock()
+
+    go func() {
+        time.Sleep(time.Second * 1)
+        done = true
+        cond.Signal()    // 发送信号，通知Wait()释放
+    }()
+
+    if !done {
+        cond.Wait()      // 堵塞主goroutine
+    }
+
+    fmt.Println("now done is", done)    //一秒钟后会打印出 now done is true
+}
+```
+这里的cond.Signal()就是用来发送一个信号给Wait来通知其释放的，sync.Cond还有一个BroadCast方法，用来通知释放所有堵塞的gouroutine。
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+var locker = new(sync.Mutex)
+var cond = sync.NewCond(locker)
+
+func read(x int) {
+    cond.L.Lock()    // 获取锁
+    cond.Wait()      // 等待通知，暂时阻塞
+    fmt.Println(x)
+    time.Sleep(time.Second * 1)
+    cond.L.Unlock()  // 释放锁，不释放的话将只会有一次输出
+}
+
+func main() {
+    for i := 0; i < 40; i++ {
+        go read(i)
+    }
+    fmt.Println("start all")
+	time.Sleep(time.Second * 1)
+    cond.Broadcast() // 下发广播给所有等待的goroutine
+    time.Sleep(time.Second * 60)
+}
 ```
 
 （完）
