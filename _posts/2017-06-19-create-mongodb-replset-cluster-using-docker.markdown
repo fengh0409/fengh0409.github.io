@@ -1,10 +1,10 @@
 ---
 layout:     post
-title:      "使用docker容器搭建mongodb集群"
+title:      "使用docker搭建mongodb集群"
 keywords:   "mongodb cluster,docker" 
 description: "详细讲述docker搭建mongodb副本集集群"
 date:       2017-06-19
-published:  false 
+published:  true 
 catalog: true
 tags:
     - docker 
@@ -57,11 +57,9 @@ services:
       - /data/mongodb/rs3:/data/db
     command: mongod --dbpath /data/db --replSet mongoreplset
 ```
-在docker-compose.yml文件所在目录执行`docker-compose up -d`，这样就启动了三个容器，`docker ps`查看：
+在docker-compose.yml文件所在目录执行`docker-compose up -d`，这样就启动了三个容器，通过`docker ps`查看容器是否启动成功，如果启动失败，可以通过命令`docker logs 容器id`查看日志信息。
 
-如果容器启动失败，可以通过命令`docker logs 容器id`查看日志信息。
-
-容器启动成功后，副本集群就搭建完成了，但此时副本集还未初始化，进入容器rs1初始化副本集:
+容器启动成功后，集群就基本搭建完成了，但此时副本集还未初始化，进入容器rs1初始化副本集:
 ```
 docker exec -ti rs1 mongo
 
@@ -70,7 +68,7 @@ rs.add('rs2:27017')
 rs.add('rs3:27017')
 rs.status()  
 ```
-通过`rs.status()`可以看到rs1是主节点，rs2和rs3是备份节点，到这里副本集就搭建成功了，现在来验证一下，在rs1容器写入一条数据，然后进入rs2和rs3查看数据是否同步：
+通过`rs.status()`可以看到rs1是主服务器，rs2和rs3是备份服务器，现在来验证一下，在rs1容器写入一条数据，然后进入rs2和rs3查看数据是否同步：
 ```
 docker exec -ti rs1 mongo
 use test
@@ -92,7 +90,7 @@ quit()
 通过运行结果可以看到数据已经同步，说明我们的副本集搭建成功了。哟嚯~~~
 
 ## 出现问题
-我们内网环境是搭了一个swarm集群，我在该集群另一台物理机上启动了一个搭好了php-fpm-nginx环境的web容器，当我在web中通过PHP客户端连接到mongo集群时，问题就来了，我发现居然连不上mongo集群(我们的web容器与mongo集群是处于同一网络模式的，所以不存在网络不通的情况。)！测试代码如下：
+我们内网环境搭了一个swarm集群，我在该集群另一台物理机上启动了一个搭好了php-fpm-nginx环境的web容器，当我在web中通过PHP客户端连接到mongo集群时，问题就来了，我发现居然连不上mongo集群！(我们的web容器与mongo集群是处于同一网络模式的，所以不存在网络不通的情况。)测试代码如下：
 ```php
 <?php
 try {
@@ -103,7 +101,7 @@ try {
     echo $e->getMessage();
 }
 ```
-运行后没有打印出结果，而是在等待数秒后捕获到了异常，说明连接到mongo集群失败，然后我使用非集群模式连接到mongo集群的单台服务器，可以正常打印结果：
+运行后没有打印出结果，而是在等待数秒后捕获到了异常，说明连接到mongo集群失败，然后我使用非集群模式连接到mongo集群的单台服务器，可以正常打印结果，说明mongo服务是可用的。
 ```php
 <?php
 try {
@@ -113,6 +111,7 @@ try {
     echo $e->getMessage();
 }
 ```
+
 这就很尴尬了，单台服务器可以连上，集群模式却连不上，在网上Google了一大圈也没啥收获，后来去请教我们老大，他说他之前搭redis集群也遇到过这样的问题，因为启动的容器如果不指定网络的话，默认使用`bridge`网络，但使用bridge网络连接到集群是有问题的，具体是什么问题我们也不确定。
 
 ## 解决方案
@@ -147,7 +146,7 @@ services:
 
 这里通过`network_mode`指令指定使用host网络，`command`指令分别指定了27017、27018、27019三个端口，然后通过`docker-compose up -d`重新启动。如果启动失败，请先`docker-compose stop`，再rm掉这几个容器，并清空挂载目录下的文件。
 
-容器重新启动后配置副本集集群，步骤和上面是一样的，但也有点区别：
+容器重新启动后初始化副本集集群，步骤和上面是一样的，但也有点区别：
 ```bash
 docker exec -ti rs1 mongo --port 27017
 
@@ -156,9 +155,7 @@ rs.add('10.0.5.11:27018')
 rs.add('10.0.5.11:27019')
 rs.status()  
 ```
-这里添加副本集成员必须使用宿主机ip而不能使用容器名，验证步骤不再赘述。
-
-然后我们重新通过PHP客户端连接到mongo集群：
+这里添加副本集成员必须使用宿主机ip而不能使用容器名，然后我们重新通过PHP客户端连接到mongo集群：
 ```php
 <?php
 try {
@@ -170,6 +167,14 @@ try {
 }
 ```
 
-运行以上代码，打印结果正常。至此，我们的mongo集群终于搭建成功并可用了。
+运行以上代码，打印结果正常。至此，我们的mongo集群终于搭建成功并能通过集群的模式来连接了。
+
+## 注意点
+当需要向mongodb导入数据时，需要指定宿主机IP：
+```bash
+mongoimport -h 10.0.5.11 -d mydb -c mycol data.dat
+```
+
+为了让以上操作全部自动化，初始化副本集的操作可以写一个shell脚本，然后构建一个镜像，使用docker-compose启动，从而在mongo容器启动后，可以通过脚本自动初始化副本集，大大提高了开发效率。
 
 （完）
