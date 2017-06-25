@@ -65,7 +65,7 @@ ga_domain: auto
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "Bazingafeng,24 years old,an PHP Engineer,working in 10jqka at Hangzhou."
+sidebar-about-description: "Bazingafeng,Hello World开发攻城狮，技术栈:PHP+GO+DOCKER，擅长使用各种流行语言构建Hello World应用程序，写代码一定要查文档一定要Google一定要GitHub一定要Stack Overflow，现在杭州一家金融互联网公司敲键盘。"
 sidebar-avatar: /img/avatar-bazinga.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
