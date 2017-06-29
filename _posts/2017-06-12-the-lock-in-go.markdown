@@ -363,7 +363,7 @@ func main() {
         go read(i)
     }
     fmt.Println("start all")
-	time.Sleep(time.Second * 1)
+    time.Sleep(time.Second * 1)
     cond.Broadcast() // 下发广播给所有等待的goroutine
     time.Sleep(time.Second * 60)
 }
