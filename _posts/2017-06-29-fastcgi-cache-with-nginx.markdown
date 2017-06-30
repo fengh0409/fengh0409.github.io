@@ -27,7 +27,7 @@ fastcgi_cache_key "$scheme$request_method$host$request_uri";
 
 `fastcgi_cache_key`指令指定缓存文件名将如何被散列，Nginx根据该指令对访问的文件进行md5加密。
 
-下一步，在`location ~ .php$ {}`中添加以下内容：
+下一步，在`location ~ \.php$ {}`中添加以下内容：
 ```
 fastcgi_cache MYAPP;
 fastcgi_cache_valid 200 60m;
@@ -64,9 +64,9 @@ server {
         try_files $uri =404;
         fastcgi_pass unix:/var/run/php5-fpm.sock;
         fastcgi_index index.php;
-        include fastcgi_params;
         fastcgi_cache MYAPP;
         fastcgi_cache_valid 200 60m;
+        include fastcgi_params;
     }
 }
 ```
@@ -75,7 +75,7 @@ server {
 创建一个打印当前时间的test.php文件：
 ```php
 <?php
-echo date('Y-m-d H:i:s').PHP_EOL;
+echo date('Y-m-d H:i:s');
 ```
 
 通过curl访问，发现每次访问的结果一样：
@@ -132,7 +132,7 @@ add_header X-Cache $upstream_cache_status;
 或者在浏览器访问http://localhost/test.php，F12查看响应内容：
 ![Alt text](/img/2017/06/response.png)
 
-## 排除某些缓存设置
+## 排除某些缓存
 某些动态内容（如身份验证所需的页面）不应被缓存，这样的内容可以根据诸如`$request_uri`，`$request_method`和`$http_cookie`这样的服务器变量被排除在缓存之外。
 
 下面是一个简单的配置示例，必须写在`server{}`块中。
@@ -170,7 +170,7 @@ if ($http_cookie = "PHPSESSID")
 fastcgi_cache_bypass $no_cache;
 fastcgi_no_cache $no_cache;
 ```
-`fasctcgi_cache_bypass`指令忽略与先前设置的条件相关的请求的现有缓存。如果满足指定的条件，`fastcgi_no_cache`指令不会缓存请求。
+`fasctcgi_cache_bypass`指令忽略与先前设置的条件相关的请求的现有缓存，如果满足指定的条件，`fastcgi_no_cache`指令不会缓存请求。
 
 ## 清除缓存
 缓存的命名约定基于我们为`fastcgi_cache_key`指令设置的变量:
