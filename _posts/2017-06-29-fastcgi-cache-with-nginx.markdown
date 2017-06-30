@@ -80,11 +80,11 @@ echo date('Y-m-d H:i:s').PHP_EOL;
 
 通过curl访问，发现每次访问的结果一样：
 ```
-[root@703dad187862 html]# curl localhost/test.php;echo
+[root@703dad187862 html]# curl http://localhost/test.php;echo
 2017-06-28 07:12:48
-[root@703dad187862 html]# curl localhost/test.php;echo
+[root@703dad187862 html]# curl http://localhost/test.php;echo
 2017-06-28 07:12:48
-[root@703dad187862 html]# curl localhost/test.php;echo
+[root@703dad187862 html]# curl http://localhost/test.php;echo
 2017-06-28 07:12:48
 ```
 
@@ -133,10 +133,10 @@ add_header X-Cache $upstream_cache_status;
 ![Alt text](/img/2017/06/response.png)
 
 ## 排除某些缓存设置
-某些动态内容（如身份验证所需的页面）不应被缓存，这样的内容可以根据诸如“requesturi”，“requestmethod”和“http_cookie”这样的服务器变量被排除在缓存之外。
+某些动态内容（如身份验证所需的页面）不应被缓存，这样的内容可以根据诸如`$request_uri`，`$request_method`和`$http_cookie`这样的服务器变量被排除在缓存之外。
 
 下面是一个简单的配置示例，必须写在`server{}`块中。
-```go
+```
 #默认缓存所有内容
 set $no_cache 0;
 
@@ -170,7 +170,7 @@ if ($http_cookie = "PHPSESSID")
 fastcgi_cache_bypass $no_cache;
 fastcgi_no_cache $no_cache;
 ```
-`fasctcgi_cache_bypass`指令忽略与先前设置的条件相关的请求的现有缓存。如果满足指定的条件，`fastcgi_no_cache`指令根本不缓存请求。
+`fasctcgi_cache_bypass`指令忽略与先前设置的条件相关的请求的现有缓存。如果满足指定的条件，`fastcgi_no_cache`指令不会缓存请求。
 
 ## 清除缓存
 缓存的命名约定基于我们为`fastcgi_cache_key`指令设置的变量:
