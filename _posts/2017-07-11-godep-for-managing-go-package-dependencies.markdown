@@ -80,7 +80,7 @@ func main() {
 
 ```
 
-如果我们的项目新增了某些依赖包，只需执行`godep save`就可以了，非常方便。这种包管理方式，有个不好的地方，就是需要将vendor目录提交到代码仓库，只有这样才能保证其他人使用的包版本一致。如果引用的包较多，则代码仓库将变得很庞大。
+如果我们的项目新增了某些依赖包，只需执行`godep save`就可以了，非常方便。这种包管理方式，也有个不好的地方，就是需要将vendor目录提交到代码仓库，只有这样才能保证其他人使用的包版本一致。如果引用的包较多，则代码仓库将变得很庞大。
 
 ## dep
 #### install
@@ -118,7 +118,7 @@ Solver wall times by segment:
   Using master as constraint for direct dep github.com/shopspring/decimal
   Locking in master (16a9418) for direct dep github.com/shopspring/decimal
 ```
-与godep不同的是，dep可以直接从远程下载依赖包，但目前dep下载包的效率比较低，而如果是需要翻墙才能下载的包，那么dep可能会一直堵塞。
+与godep不同的是，dep可以直接从远程下载依赖包，但目前下载的速度较慢，而如果是需要翻墙才能下载的包，那么dep可能会一直堵塞。
 
 `dep init`执行完后，查看当前目录结构：
 ```
@@ -182,7 +182,7 @@ github.com/cihub/seelog  [github.com/cihub/seelog]
 This happens when a new import is added. Run `dep ensure` to install the missing packages.
 ```
 
-`dep status`会去检查Gopkg.lock和项目中引入的第三方包是否匹配，若不匹配，则会提示使用`dep ensure`安装依赖包。
+发现dep给出了一个提示，这是因为`dep status`会去检查Gopkg.lock和项目中引入的第三方包是否匹配，若不匹配，则会提示使用`dep ensure`安装依赖包。
 
 执行`dep ensure`后再执行`dep status`查看状态：
 ```
@@ -228,13 +228,14 @@ github.com/shopspring/decimal  branch master  branch master  16a9418   16a9418  
 
 可以看到，新增的包已经被正确安装，同时，Gopkg.lock和vendor也被更新了。同理，当我们的项目不再使用某个包，也要执行`dep ensure`来更新Gopkg.lock和vendor目录。
 
-`dep status`是根据Gopkg.lock文件的内容来列出各个依赖包信息的。
-
 #### dep ensure
-通过上面的例子我们可以知道，`dep ensure`命令会根据项目代码依赖的包，将对应包信息写入Gopkg.lock文件，将包源码下载到vendor目录，当不再使用某个包时，`dep ensure`也会将其移除。但该命令不会更新Gopkg.toml文件。
+通过上面的例子我们可以知道，`dep ensure`命令会根据项目代码依赖的包，将对应包信息写入Gopkg.lock文件，将包源码下载到vendor目录，当不再使用某个包时，执行`dep ensure`也会将其移除。
 
-通常，我们只需要将Gopkg.toml和Gopkg.lock文件提交到代码仓库就可以了，其他人在开发同样的项目时，clone项目到本地后只需要在根目录下执行`dep ensure`就可以下载所依赖的包到vendor目录，而Gopkg.lock就是用来指定下载依赖包的版本号的。
+`dep ensure`是如何知道要下载的包的版本号呢？下面要划重点了：**dep ensure下载依赖包的版本是由Gopkg.toml约束的，而Gopkg.lock只是用来记录下载的各个依赖包的具体版本信息，也就是`dep status`看到的结果，如果删除Gopkg.lock文件，`dep status`结果将为空。**
 
+Gopkg.toml是由`dep init`生成，其中记录了各个依赖包的版本约束，该文件不会被自动更新。
+
+通常，我们只需要将Gopkg.toml和Gopkg.lock文件提交到代码仓库就可以了，其他人在开发同样的项目时，clone项目到本地后只需要在根目录下执行`dep ensure`就可以下载所依赖的包到vendor目录。
 
 #### 深入dep
 
