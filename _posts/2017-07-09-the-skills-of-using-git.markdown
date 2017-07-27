@@ -22,7 +22,7 @@ log/
 
 但是，如果我们第一次并没有提交.gitignore，而是在以后加入该文件，我们会发现忽略的文件或目录改动后，git status照样会显示其已修改，这时候我们需要将本地缓存删除并重新提交才会生效：
 ```bash
-git rm -r cached .
+git rm -r --cached .
 git add --all
 git commit -m 'delete cache'
 git push
