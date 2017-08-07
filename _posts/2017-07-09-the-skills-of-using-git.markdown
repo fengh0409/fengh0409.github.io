@@ -28,6 +28,25 @@ git commit -m 'delete cache'
 git push
 ```
 
+## git log
+该命令用于查看提交历史记录
+
+*`git log -p` 显示每次提交的差异对比，`git log -p -2`仅显示最近的两次更新
+*`git log -stat` 显示修改的行数
+*`git log --pretty=oneline` 单行显示历史提交记录
+```
+ca82a6dff817ec66f44342007202690a93763949 changed the version number
+085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7 removed unnecessary test code
+a11bef06a3f659402fe7563abf99ad00de2209e6 first commit
+```
+*`git log --pretty=format:"%s"` 定制要显示的记录格式
+```
+git log --pretty=format:"%h - %an, %ar : %s"
+ca82a6d - Scott Chacon, 11 months ago : changed the version number
+085bb3b - Scott Chacon, 11 months ago : removed unnecessary test code
+a11bef0 - Scott Chacon, 11 months ago : first commit
+```
+
 ## 子模块
 子模块在git中用的比较少，什么是子模块呢？比如我们有一个git项目A，而该项目又包含另一个git项目B，那么B就是A的子模块。
 
