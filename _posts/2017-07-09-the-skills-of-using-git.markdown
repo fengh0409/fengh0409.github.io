@@ -12,6 +12,23 @@ tags:
 
 有些东西一段时间不用就特别容易忘，最近在使用git的时候老是要去查文档，所以在这里记录git的一些用法，以方便以后查阅。
 
+## 拉取远程新分支
+以前我要拉一个远程分支到本地，一般是通过`git pull origin b1:b1`这种方式来拉的，直到有天出现问题了才发现，`git pull`拉取的分支会和当前本地分支合并，比如我现在在master分支，执行`git pull origin b1:b1`时，git会将b1合并到master，因为`git pull`相当于`git fetch`+`git merge`，而我们往往不希望他们进行合并操作。因此，应通过以下方式拉取分支：
+```git
+#拉取origin主机的b1分支
+git fetch origin b1
+#checkout到b1分支后，处于detached HEAD状态
+git checkout origin/b1
+#在origin/b1中新建本地b1分支，这样就把远程b1分支拉下来了
+git checkout -b b1
+```
+更新本地分支也应使用上述方式：
+```git
+git fetch origin b1
+git merge origin/b1
+```
+尽量少用`git pull`，虽然这很方便，但是容易出错。
+
 ## .gitignore
 .gitignore文件可以让你忽略本地文件或目录的改动，在第一次提交到远程git仓库前，将你要忽略的文件或目录路径添加到.gitignore就行了，然后git push到remote仓库。如：
 ```
