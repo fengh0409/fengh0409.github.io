@@ -4,7 +4,7 @@ title:      "使用kubeadm安装kubernetes"
 keywords:   "kubeadm,kubernetes,k8s" 
 description: "kubeadm安装kubernetes集群"
 date:       2017-11-20
-published:  false 
+published:  true 
 catalog: true
 tags:
     - k8s 
@@ -12,7 +12,7 @@ tags:
 ---
 
 ## 前言
-kubeadm是kubernetes官方提供的快速安装kubernetes集群的工具，相比以前手动安装各个组件，kubeadm可以说是非常方便了。我在安装的过程中遇到了很多坑，而引起这些坑的根本原因就是网络不通，因为要去拉谷歌的镜像，如果服务器没有配代理的话，会遇到各种各样的问题。所以，建议大家在安装前先配好代理，如果没有代理只能墙内安装，需要从其他镜像仓库把各个镜像拉下来，并修改各个yaml文件。下面详细介绍下我安装单master k8s集群的过程。
+kubeadm是kubernetes官方提供的快速安装kubernetes集群的工具，相比以前手动安装各个组件，kubeadm可以说是非常方便了。我在安装的过程中遇到了很多坑，而引起这些坑的根本原因就是网络不通，因为要去拉谷歌的镜像，如果服务器没有配代理的话，会遇到各种各样的问题。所以，建议大家在安装前先配好代理，如果没有代理只能墙内安装，需要从其他镜像仓库把各个镜像拉下来，并修改各个yaml文件。下面详细介绍下我使用代理安装单master k8s集群的过程。
 
 ## 准备工作
 **说明：此次安装是在CentOS 7上安装`v1.8.0`版本的k8s。**
@@ -77,7 +77,7 @@ Docker从1.13版本开始调整了默认的防火墙规则，禁用了iptables f
 iptables -P FORWARD ACCEPT
 ```
 
-不过建议在各个node将该命令加入到docker的启动配置中，如下：
+这里建议在各个node将该命令加入到docker的启动配置中，在/etc/systemd/system/docker.service文件中加入以下内容：
 ```shell
 ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT
 ```
@@ -130,7 +130,7 @@ systemctl enable kubelet
 systemctl start kubelet
 ```
 
-这里要确保docker和kubeadm的cgroup driver一致，若不一致，请修改为`systemd`或`cgroupfs`。
+这里要确保docker和kubelet的cgroup driver一致，若不一致，请修改为`systemd`或`cgroupfs`。
 
 查看docker的cgroup driver：`docker info|grep Cgroup`，kubelet的启动参数`--cgroup-driver`的默认值为cgroupfs，而yum安装kubeadm和kubelet时，生成的`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件将这个参数值改为了systemd。可以查看该文件的内容`cat  /etc/systemd/system/kubelet.service.d/10-kubeadm.conf|grep cgroup`。
 
@@ -150,14 +150,12 @@ systemctl restart docker
 ```
 
 ## 初始化
-**注意：初始化之前请确保已经配置好代理，否则无法成功初始化**
-
 指定安装k8s版本为v1.8.0，第二个参数值表明pod网络指定为flannel，更多参数可以查看help
 ```shell
 kubeadm init --kubernetes-version v1.8.0 --pod-network-cidr=10.244.0.0/16
 ```
 
-因为我安装的是单master的集群，所以只在主节点服务器执行init操作，工作节点上不要执行。
+因为我安装的是单master的集群，所以只在主节点服务器执行该init操作，工作节点上不要执行。
 
 若初始化失败，执行以下命令清理一些可能存在的网络问题，然后重新初始化
 ```shell
@@ -223,9 +221,9 @@ as root:
   kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
 ```
 
-到这里，初始化已经完成，通过初始化返回的最后几行信息可以看出还有些工作要做，上面最后一行的`kubeadm join --token`命令要记录下来，添加工作节点会用到。
+到这里，初始化已经完成，通过返回的最后几行信息可以看出还有些工作要做，上面最后一行的`kubeadm join --token`命令要记录下来，添加工作节点会用到。
 
-**注意：初始化完成后，要将全局代理和docker代理都去掉，否则无法将工作节点加入到集群。**
+**注意：初始化完成后，要将全局代理和docker代理都去掉，否则无法将工作节点加入到集群，或遇到一些网络问题。**
 
 ## 安装pod网络
 因为初始化的时候指定了flannel pod network，所以这里我安装的是flannel
@@ -261,7 +259,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-添加其他服务器作为工作节点，在其他服务器上执行`kubeadm init`返回的命令，类似如下：
+添加其他服务器作为工作节点，在其他服务器上执行初始化返回的命令，类似如下：
 ```shell
 kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>    
 ```
@@ -337,10 +335,7 @@ NAME                   TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        
 kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP   4h
 ```
 
-浏览器访问https://<Node-IP>:<NodePort>，会看到如下的登录界面：
-    
-
-这里需要一个token来登录，也可以点击`SKIP`跳过登录直接进入dashboard，不过看不到任何集群相关的信息。
+浏览器访问https://<Node-IP>:<NodePort>，会看到登录界面，这里需要一个token来登录，也可以点击`SKIP`跳过登录直接进入dashboard，不过看不到任何集群相关的信息。
 
 获取token：
 ```shell
