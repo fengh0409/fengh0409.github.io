@@ -150,12 +150,14 @@ systemctl restart docker
 ```
 
 ## 初始化
-**注意：kubeadm初始化之前请确保已经配置好代理，否则无法成功初始化**
+**注意：初始化之前请确保已经配置好代理，否则无法成功初始化**
 
 指定安装k8s版本为v1.8.0，第二个参数值表明pod网络指定为flannel，更多参数可以查看help
 ```shell
 kubeadm init --kubernetes-version v1.8.0 --pod-network-cidr=10.244.0.0/16
 ```
+
+因为我安装的是单master的集群，所以只在主节点服务器执行init操作，工作节点上不要执行。
 
 若初始化失败，执行以下命令清理一些可能存在的网络问题，然后重新初始化
 ```shell
@@ -221,9 +223,9 @@ as root:
   kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
 ```
 
-到这里，初始化已经完成，通过初始化返回的最后几行信息可以看出还有些工作要做。
+到这里，初始化已经完成，通过初始化返回的最后几行信息可以看出还有些工作要做，上面最后一行的`kubeadm join --token`命令要记录下来，添加工作节点会用到。
 
-**注意：上面最后一行的`kubeadm join --token`命令要记录下来，添加工作节点会用到。**
+**注意：初始化完成后，要将全局代理和docker代理都去掉，否则无法将工作节点加入到集群。**
 
 ## 安装pod网络
 因为初始化的时候指定了flannel pod network，所以这里我安装的是flannel
@@ -305,15 +307,31 @@ taint key="dedicated" and effect="" not found.
 至此，k8s集群就算搭建完成了。
 
 ## 部署dashboard
-dashboard为集群管理提供了UI界面，是官方出的一个工具，很有用，搭建非常简单。
+dashboard是k8s官方出的一个插件，为集群管理提供了UI界面，很有用，搭建也非常简单。
 
 ```shell
 wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 kubectl create -f kubernetes-dashboard.yaml
 ```
 
+该插件依赖两个谷歌镜像：
 
-创建kubernetes-dashboard-admin.rbac.yaml：
+gcr.io/google_containers/kubernetes-dashboard-init-amd64:v1.0.1
+ 
+gcr.io/google_containers/kubernetes-dashboard-amd64:v1.7.1
+ 
+这里我从其他的镜像仓库pull这两个镜像，然后将kubernetes-dashboard.yaml文件的image改为自己的镜像名。**注意：这里安装的dashboard是v1.7.1版本，v1.7.x需要以https的方式访问。**官方访问dashboard并不是通过NodePort暴露服务端口的形式，这里我修改了kubernetes-dashboard.yaml文件，使其以NodePort的形式暴露服务端口，在yaml文件最后一行加上`type: NodePort`，如下：
+```yaml
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: NodePort
+```
+
+kubernetes-dashboard.yaml文件中的ServiceAccount kubernetes-dashboard只有相对较小的权限，无法使用dashboard的全部功能，因此我们创建一个kubernetes-dashboard-admin的ServiceAccount并绑定admin的权限，创建kubernetes-dashboard-admin.rbac.yaml文件：
 ```yaml
 ---
 apiVersion: v1
@@ -341,15 +359,11 @@ subjects:
   namespace: kube-system
 ```
 
-执行命令：
-```shell
-kubectl create -f kubernetes-dashboard-admin.rbac.yaml
-```
+执行 `kubectl create -f kubernetes-dashboard-admin.rbac.yaml`
 
 查看kubernete-dashboard-admin的token:
 ```shell
-kubectl -n kube-system get secret | grep kubernetes-dashboard-admin
-kubectl describe -n kube-system secret/token-pod-name
+kubectl get secret -n kube-system|grep kubernetes-dashboard-admin-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 ```
 
 然后用token登录dashboard
