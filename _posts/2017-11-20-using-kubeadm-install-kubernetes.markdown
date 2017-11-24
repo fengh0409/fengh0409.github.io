@@ -320,6 +320,7 @@ gcr.io/google_containers/kubernetes-dashboard-amd64:v1.7.1
  
 这里我从其他的镜像仓库pull这两个镜像，然后将kubernetes-dashboard.yaml文件的image改为自己的镜像名。**注意：这里安装的dashboard是v1.7.1版本，v1.7.x需要以https的方式访问。**官方访问dashboard并不是通过NodePort暴露服务端口的形式，这里我修改了kubernetes-dashboard.yaml文件，使其以NodePort的形式暴露服务端口，在yaml文件最后一行加上`type: NodePort`，如下：
 ```yaml
+······
 spec:
   ports:
     - port: 443
