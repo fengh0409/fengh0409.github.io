@@ -331,7 +331,36 @@ spec:
   type: NodePort
 ```
 
-kubernetes-dashboard.yaml文件中的ServiceAccount kubernetes-dashboard只有相对较小的权限，无法使用dashboard的全部功能，因此我们创建一个kubernetes-dashboard-admin的ServiceAccount并绑定admin的权限，创建kubernetes-dashboard-admin.rbac.yaml文件：
+然后执行：`kubectl -n kube-system get service kubernetes-dashboard`，查看pod内443对外暴露的NodePort为30001：
+```shell
+NAME                   TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
+kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP   4h
+```
+
+浏览器访问https://<Node-IP>:<NodePort>，会看到如下的登录界面：
+    
+
+这里需要一个token来登录，也可以点击`SKIP`跳过登录直接进入dashboard，不过看不到任何集群相关的信息。
+
+获取token：
+```shell
+[root@bazingafeng]# kubectl get secret -n kube-system|grep kubernetes-dashboard-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
+Name:         kubernetes-dashboard-token-qsgvh
+Namespace:    kube-system
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name=kubernetes-dashboard
+              kubernetes.io/service-account.uid=5cbf9d64-d139-11e7-ba2f-001517872222
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+ca.crt:     1025 bytes
+namespace:  11 bytes
+token:      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1xc2d2aCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjVjYmY5ZDY0LWQxMzktMTFlNy1iYTJmLTAwMTUxNzg3MjUzMCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.blwE2XEtrTKJSdn1zUnKTdO9gr23fub6MRhmAECfekHucuWxT2DdmHA5Jr6MnNXSY9YCxU0ynTjVSiN0AMT-aOKoFuN7ndzJ-r3hO426FTu812m9cxVB39QqP35pJ0M8RhxBfNOywtgA0mY7KK8z7UbWwE3_kDMWKgzr9nL-CIKm9swbvXq0CEjVzbEnBONoE8q3nB7WT_WmgnMy29ceZoDXc8Z45cpJM6-cV0Wl7RpsaCMNiL22WTEjkwI34KvBDXawWvTr1uwcJElPU85Z12MTZMbA1ohTBECqR8gUOrVsTY3HV1Tq8rJmfOO52PwnoQvoxT1KCFHdx6-y87JWEg
+```
+
+用token登录，会发现看不到任何集群相关的信息，这是因为dashboard是基于RBAC来控制访问权限的，而默认的ServiceAccount只有很小的权限，因此这里要创建一个kubernetes-dashboard-admin的ServiceAccount并绑定admin的权限，创建kubernetes-dashboard-admin.rbac.yaml文件：
 ```yaml
 ---
 apiVersion: v1
@@ -366,9 +395,9 @@ subjects:
 kubectl get secret -n kube-system|grep kubernetes-dashboard-admin-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 ```
 
-然后用token登录dashboard
+再用这个token登录dashboard，就可以看到集群的信息了。
 
 ## 总结
-
+总的来说，使用kubeadm安装k8s集群还是很方便的，省了很多事，官方还提供了一些插件，比如日志管理、监控等，部署也很简单，这里就暂不赘述了，后面有时间再整理。
 
 参考：[https://www.kubernetes.org.cn/2906.html](https://www.kubernetes.org.cn/2906.html)
