@@ -4,7 +4,7 @@ title:      "使用kubeadm安装kubernetes"
 keywords:   "kubeadm,kubernetes,k8s" 
 description: "kubeadm安装kubernetes集群"
 date:       2017-11-20
-published:  false 
+published:  true 
 catalog: true
 tags:
     - k8s 
