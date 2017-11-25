@@ -12,7 +12,7 @@ tags:
 ---
 
 ## 前言
-kubeadm是kubernetes官方提供的安装kubernetes集群的工具，相比于以前手动安装，kubeadm可以说是非常方便了。我在安装的过程中，遇到了很多坑，而引起这些坑的根本原因就是网络不通，因为要去拉谷歌的镜像，如果服务器没有配代理的话，会遇到各种各样的问题。所以，建议大家在安装前先配好代理，最好不要去尝试墙内安装，我也试过把谷歌的镜像通过其他的镜像仓库拉下来，然后修改yml文件，仍然会有问题，而翻墙后再去安装就变得异常顺利了，总之，墙内安装真的会把你坑惨。
+kubeadm是kubernetes官方提供的快速安装kubernetes集群的工具，相比以前手动安装各个组件，kubeadm可以说是非常方便了。我在安装的过程中遇到了很多坑，而引起这些坑的根本原因就是网络不通，因为要去拉谷歌的镜像，如果服务器没有配代理的话，会遇到各种各样的问题。所以，建议大家在安装前先配好代理，如果没有代理只能墙内安装，需要从其他镜像仓库把各个镜像拉下来，并修改各个yaml文件。下面详细介绍下我使用代理安装单master k8s集群的过程。
 
 ## 准备工作
 **说明：此次安装是在CentOS 7上安装`v1.8.0`版本的k8s。**
@@ -34,7 +34,7 @@ kubeadm是kubernetes官方提供的安装kubernetes集群的工具，相比于�
 30000-32767    	Default port range for NodePort Services.
 ```
 
-* 一些必要的操作（各个节点均需执行）
+* 一些准备工作
 
 ```shell
 #关闭防火墙
@@ -53,9 +53,6 @@ sysctl -p /etc/sysctl.d/k8s.conf
 
 #关闭swap，Kubernetes 1.8开始要求关闭系统的Swap，如果不关闭，默认配置下kubelet将无法启动
 swapoff -a
-
-#Docker从1.13版本开始调整了默认的防火墙规则，禁用了iptables filter表中FOWARD链，这样会引起Kubernetes集群中跨Node的Pod无法通信，在各个Docker节点执行下面的命令
-iptables -P FORWARD ACCEPT
 ```
 
 ## 安装docker
@@ -73,6 +70,22 @@ yum install -y --setopt=obsoletes=0  docker-ce-17.03.2.ce-1.el7.centos  docker-c
 #启动docker
 systemctl enable docker
 systemctl start docker
+```
+
+Docker从1.13版本开始调整了默认的防火墙规则，禁用了iptables filter表中FOWARD链，这样会引起Kubernetes集群中跨node的pod无法通信，在各个Docker节点执行以下命令：
+```shell
+iptables -P FORWARD ACCEPT
+```
+
+这里建议在各个node将该命令加入到docker的启动配置中，在/etc/systemd/system/docker.service文件中加入以下内容：
+```shell
+ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT
+```
+
+然后重启docker:
+```shell
+systemctl daemon-reload
+systemctl restart docker
 ```
 
 ## 配置代理
@@ -117,15 +130,11 @@ systemctl enable kubelet
 systemctl start kubelet
 ```
 
-查看docker和kubeadm的cgroup driver：
-```shell
-docker info|grep Cgroup
-kubeadm info|grep Cgroup
-```
+这里要确保docker和kubelet的cgroup driver一致，若不一致，请修改为`systemd`或`cgroupfs`。
 
-请确保docker和kubeadm的cgroup driver一致，若不一致，请修改为`systemd`或`cgroupfs`。kubelet的启动参数将cgroup driver默认设为了`cgroupfs`，而yum安装kubeadm和kubelet时，生成的`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件将这个参数值改为了systemd。
+查看docker的cgroup driver：`docker info|grep Cgroup`，kubelet的启动参数`--cgroup-driver`的默认值为cgroupfs，而yum安装kubeadm和kubelet时，生成的`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件将这个参数值改为了systemd。可以查看该文件的内容`cat  /etc/systemd/system/kubelet.service.d/10-kubeadm.conf|grep cgroup`。
 
-这里修改docker的cgroup driver为`systemd`（各个节点均需执行）
+这里修改docker的cgroup driver为`systemd`
 ```shell
 cat << EOF > /etc/docker/daemon.json
 {
@@ -134,21 +143,21 @@ cat << EOF > /etc/docker/daemon.json
 EOF
 ```
 
-然后重启docker
+重启docker
 ```shell
 systemctl daemon-reload
 systemctl restart docker
 ```
 
 ## 初始化
-**注意：kubeadm初始化之前请确保已经配置好代理，否则无法成功初始化**
-
+指定安装k8s版本为v1.8.0，第二个参数值表明pod网络指定为flannel，更多参数可以查看help
 ```shell
-#指定安装k8s版本为v1.8.0，第二个参数值表明pod网络指定为flannel
 kubeadm init --kubernetes-version v1.8.0 --pod-network-cidr=10.244.0.0/16
 ```
 
-若初始化失败，执行以下命令清理一些可能存在的网络问题，然后重新初始化：
+因为我安装的是单master的集群，所以只在主节点服务器执行该init操作，工作节点上不要执行。
+
+若初始化失败，执行以下命令清理一些可能存在的网络问题，然后重新初始化
 ```shell
 kubeadm reset
 ifconfig cni0 down
@@ -212,18 +221,18 @@ as root:
   kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
 ```
 
-到这里，初始化已经完成，通过初始化返回的信息可以看出，还有些工作要做。
+到这里，初始化已经完成，通过返回的最后几行信息可以看出还有些工作要做，上面最后一行的`kubeadm join --token`命令要记录下来，添加工作节点会用到。
 
-上面最后一行token要记录下来，添加工作节点会用到。
+**注意：初始化完成后，要将全局代理和docker代理都去掉，否则无法将工作节点加入到集群，或遇到一些网络问题。**
 
 ## 安装pod网络
-这里我安装的是flannel
+因为初始化的时候指定了flannel pod network，所以这里我安装的是flannel
 ```shell
 wget https://raw.githubusercontent.com/coreos/flannel/v0.9.0/Documentation/kube-flannel.yml
 kubectl apply -f kube-flannel.yml
 ```
 
-若安装失败，查看节点是否有多个网卡，如果有的话，需要在kube-flannel.yml中使用–iface参数指定集群主机内网卡的名称，否则可能会出现dns无法解析。需要将kube-flannel.yml下载到本地，flanneld启动参数加上–iface=<iface-name>，如下：
+若安装失败，查看是否有多个网卡，如果有的话，需要在kube-flannel.yml中使用–iface参数指定集群主机内网卡的名称，否则可能会出现dns无法解析。修改-flannel.yml文件，给flanneld启动参数加上`–iface=<iface-name>`，如下：
 ```yaml
 ......
 apiVersion: extensions/v1beta1
@@ -243,17 +252,18 @@ containers:
 安装完成后，可以通过`kubectl get pods --all-namespaces`命令查看名为`kube-dns`的pod是否处于Running状态来确定flannel网络是否安装成功。若还是失败，请[查看troubleshooting-kubeadm](https://kubernetes.io/docs/setup/independent/troubleshooting-kubeadm/)或上GitHub查阅相关问题。
 
 ## 开始使用
-pod网络配置好以后，还有以下操作需要做：
+pod网络配置好以后，需要配置常规用户访问k8s集群:
 ```shell
-#配置常规用户访问k8s集群
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-#添加工作节点
-kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>    
 ```
 
+添加其他服务器作为工作节点，在其他服务器上执行初始化返回的命令，类似如下：
+```shell
+kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>    
+```
+    
 节点添加成功后，会看到类似下面的输出：
 ```shell
 [kubeadm] WARNING: kubeadm is in beta, please do not use it for production clusters.
@@ -276,12 +286,13 @@ Node join complete:
 Run 'kubectl get nodes' on the master to see this machine join.
 ```
 
-查看所有节点状态：`kubectl get nodes`
+在主节点上查看所有节点状态：`kubectl get nodes`
 
 默认情况下，集群不会将pod调度到主节点，若想要调度到主节点，执行以下命令：
 ```shell
 kubectl taint nodes --all node-role.kubernetes.io/master-
 ```
+
 会看到类似下面的输出：
 ```shell
 node "test-01" untainted
@@ -289,18 +300,63 @@ taint key="dedicated" and effect="" not found.
 taint key="dedicated" and effect="" not found.
 ```
 
+默认情况下，工作节点上也不能使用`kubectl`执行查阅集群信息的相关命令。
+
 至此，k8s集群就算搭建完成了。
 
 ## 部署dashboard
-dashboard为集群管理提供了UI界面，是官方出的一个工具，很有用，搭建非常简单。
+dashboard是k8s官方出的一个插件，为集群管理提供了UI界面，很有用，搭建也非常简单。
 
 ```shell
 wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 kubectl create -f kubernetes-dashboard.yaml
 ```
 
+该插件依赖两个谷歌镜像：
 
-创建kubernetes-dashboard-admin.rbac.yaml：
+gcr.io/google_containers/kubernetes-dashboard-init-amd64:v1.0.1
+ 
+gcr.io/google_containers/kubernetes-dashboard-amd64:v1.7.1
+ 
+这里我从其他的镜像仓库pull这两个镜像，然后将kubernetes-dashboard.yaml文件的image改为自己的镜像名。**注意：这里安装的dashboard是v1.7.1版本，v1.7.x需要以https的方式访问。**官方访问dashboard并不是通过NodePort暴露服务端口的形式，这里我修改了kubernetes-dashboard.yaml文件，使其以NodePort的形式暴露服务端口，在yaml文件最后一行加上`type: NodePort`，如下：
+```yaml
+······
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: NodePort
+```
+
+然后执行：`kubectl -n kube-system get service kubernetes-dashboard`，查看pod内443对外暴露的NodePort为30001：
+```shell
+NAME                   TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
+kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP   4h
+```
+
+浏览器访问https://<Node-IP>:<NodePort>，会看到登录界面，这里需要一个token来登录，也可以点击`SKIP`跳过登录直接进入dashboard，不过看不到任何集群相关的信息。
+
+获取token：
+```shell
+[root@bazingafeng]# kubectl get secret -n kube-system|grep kubernetes-dashboard-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
+Name:         kubernetes-dashboard-token-qsgvh
+Namespace:    kube-system
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name=kubernetes-dashboard
+              kubernetes.io/service-account.uid=5cbf9d64-d139-11e7-ba2f-001517872222
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+ca.crt:     1025 bytes
+namespace:  11 bytes
+token:      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1xc2d2aCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjVjYmY5ZDY0LWQxMzktMTFlNy1iYTJmLTAwMTUxNzg3MjUzMCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.blwE2XEtrTKJSdn1zUnKTdO9gr23fub6MRhmAECfekHucuWxT2DdmHA5Jr6MnNXSY9YCxU0ynTjVSiN0AMT-aOKoFuN7ndzJ-r3hO426FTu812m9cxVB39QqP35pJ0M8RhxBfNOywtgA0mY7KK8z7UbWwE3_kDMWKgzr9nL-CIKm9swbvXq0CEjVzbEnBONoE8q3nB7WT_WmgnMy29ceZoDXc8Z45cpJM6-cV0Wl7RpsaCMNiL22WTEjkwI34KvBDXawWvTr1uwcJElPU85Z12MTZMbA1ohTBECqR8gUOrVsTY3HV1Tq8rJmfOO52PwnoQvoxT1KCFHdx6-y87JWEg
+```
+
+用token登录，会发现看不到任何集群相关的信息，这是因为dashboard是基于RBAC来控制访问权限的，而默认的ServiceAccount只有很小的权限，因此这里要创建一个kubernetes-dashboard-admin的ServiceAccount并绑定admin的权限，创建kubernetes-dashboard-admin.rbac.yaml文件：
 ```yaml
 ---
 apiVersion: v1
@@ -328,17 +384,16 @@ subjects:
   namespace: kube-system
 ```
 
-执行命令：
-```shell
-kubectl create -f kubernetes-dashboard-admin.rbac.yaml
-```
+执行 `kubectl create -f kubernetes-dashboard-admin.rbac.yaml`
 
 查看kubernete-dashboard-admin的token:
 ```shell
-kubectl -n kube-system get secret | grep kubernetes-dashboard-admin
-kubectl describe -n kube-system secret/token-pod-name
+kubectl get secret -n kube-system|grep kubernetes-dashboard-admin-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 ```
 
-然后用token登录dashboard
+再用这个token登录dashboard，就可以看到集群的全部信息了。
 
 ## 总结
+总的来说，使用kubeadm安装k8s集群还是很方便的，省了很多事，我在安装过程中，主要的问题还是墙内安装时遇到的网络问题，后来上了代理之后，整个安装过程就顺畅多了。另外，官方还提供了一些插件，比如日志管理、监控等，很好用，部署也很简单，这里就暂不赘述了，后面有时间再整理。
+
+参考：[https://www.kubernetes.org.cn/2906.html](https://www.kubernetes.org.cn/2906.html)
