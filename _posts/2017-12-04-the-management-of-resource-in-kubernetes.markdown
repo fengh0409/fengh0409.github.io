@@ -72,7 +72,7 @@ spec:
 ```
 
 这是因为该pod被kill掉了，然后pod重启并重新启动了一个新的容器。查看pod状态，发现该pod的RESTART变为1了，说明该pod重启过一次，如下：
-```shell```
+```shell
 ```
 
 ### 硬盘资源
