@@ -44,13 +44,13 @@ location ~ \.php$ {
 ```
 
 查看fpm配置文件，其默认监听在9000端口，修改该配置使其监听Unix socket：
-```ini
+```
 ;listen = 9000
 listen = /var/run/php-fpm.socket
 ```
 
 然后修改Nginx配置文件：
-```nginx
+```
 #fastcgi_pass   127.0.0.1:9000;
 fastcgi_pass   unix:/var/run/php-fpm.socket;
 ```
