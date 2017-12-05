@@ -36,7 +36,7 @@ kubeadm是kubernetes官方提供的快速安装kubernetes集群的工具，相�
 
 * 一些准备工作
 
-```shell
+```bash
 #关闭防火墙
 systemctl stop firewalld
 systemctl disable firewalld
@@ -57,7 +57,7 @@ swapoff -a
 
 ## 安装docker
 这里我安装的是`17.03.2.ce`版本
-```shell
+```bash
 #卸载已安装的docker
 yum list installed | awk '{print $1}' | grep docker | xargs yum -y remove
 
