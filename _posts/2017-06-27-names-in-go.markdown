@@ -33,7 +33,7 @@ Go中的变量名应该使用大小写混合，而不应使用names_with_undersc
 较长的变量名在很长的函数或带有很多局部变量的函数中可能很有用，但这往往意味着你的代码该重构了。
 
 不要这样命名：
-```go
+```
 func RuneCount(buffer []byte) int {
     index, count := 0, 0
     for index < len(buffer) {
@@ -50,7 +50,7 @@ func RuneCount(buffer []byte) int {
 ```
 
 而应该这样命名：
-```go
+```
 func RuneCount(b []byte) int {
     i, n := 0, 0
     for i < len(b) {
@@ -70,14 +70,14 @@ func RuneCount(b []byte) int {
 函数参数类似局部变量，但它们也可以用于文档说明。
 
 如果参数类型是描述性的，那么它们应该是简短的：
-```go
+```
 func AfterFunc(d Duration, f func()) *Timer
 
 func Escape(w io.Writer, s []byte)
 ```
 
 如果参数类型有歧义，那么变量名应该可以提供说明：
-```go
+```
 func Unix(sec, nsec int64) Time
 
 func HasPrefix(s, prefix []byte) bool
@@ -87,7 +87,7 @@ func HasPrefix(s, prefix []byte) bool
 导出函数的返回值命名应该仅仅被用于文档说明。
 
 下面是命名返回值的比较好的例子：
-```go
+```
 func Copy(dst Writer, src Reader) (written int64, err error)
 
 func ScanBytes(data []byte, atEOF bool) (advance int, token []byte, err error)
@@ -97,7 +97,7 @@ func ScanBytes(data []byte, atEOF bool) (advance int, token []byte, err error)
 接收器是一种特殊的参数。
 
 按照惯例，它们是反映接收器类型的一个或两个字符，因为它们通常出现在几乎每一行：
-```go
+```
 func (b *Buffer) Read(p []byte) (n int, err error)
 
 func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request)
@@ -114,21 +114,21 @@ func (r Rectangle) Size() Point
 
 #### 接口类型
 仅指定了一个方法的接口，该接口的命名在函数名后加`er`即可。
-```go
+```
 type Reader interface {
     Read(p []byte) (n int, err error)
 }
 ```
 
 有时候加了`er`的接口名不是一个正确的英文单词，但我们仍然会使用该命名：
-```go
+```
 type Execer interface {
     Exec(query string, args []Value) (Result, error)
 }
 ```
 
 有时候我们根据英语语法来命名，使其看起来更容易理解：
-```go
+```
 type ByteReader interface {
     ReadByte() (c byte, err error)
 }
@@ -138,14 +138,14 @@ type ByteReader interface {
 
 #### 错误
 错误类型接口的命名应该是`FooError`这种形式：
-```go
+```
 type ExitError struct {
     ...
 }
 ```
 
 错误的变量命名应该是`ErrFoo`这种形式：
-```go
+```
 var ErrFormat = errors.New("image: unknown format")
 ```
 
@@ -154,17 +154,17 @@ var ErrFormat = errors.New("image: unknown format")
 
 #### 导入路径
 一个包路径的最后一部分应该和包名一致：
-```go
+```
 "compress/gzip" // package gzip
 ```
 
 避免在库和包路径的stutter：
-```go
+```
 "code.google.com/p/goauth2/oauth2" // bad; my fault
 ```
 
 对于库来说，经常将包代码放在仓库根目录：
-```go
+```
 "github.com/golang/oauth2" // package oauth2
 ```
 
