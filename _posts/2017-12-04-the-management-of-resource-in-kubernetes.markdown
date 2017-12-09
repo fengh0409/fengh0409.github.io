@@ -17,7 +17,7 @@ Kubernetes中，资源指的是可以被pod或容器“请求”,“分配”,�
 ## 资源限制
 如果未做过节点nodeSelector、亲和性（node affinity）或pod亲和、反亲和性（pod affinity/anti-affinity）等[Pod高级调度策略设置](http://dockone.io/article/2635)，我们无法指定pod部署到指定机器上，这可能会造成CPU或内存等密集型的pod同时分配到相同节点，造成资源竞争。另一方面，如果未对资源进行限制，一些关键的服务可能会因为资源竞争因OOM等原因被kill掉，或者被限制使用CPU。
 
-### CPU、内存资源
+#### CPU、内存资源
 在部署pod时，可以指定每个容器的资源请求和资源限额。分别由requests和limits控制：
 
 * requests：资源请求，表示需要多少资源。
@@ -27,7 +27,7 @@ Kubernetes中，资源指的是可以被pod或容器“请求”,“分配”,�
 
 当给一个容器指定了resource requests时，调度器可以更好地决定将pod放在哪个node上。目前容器仅支持CPU和内存资源的requests和limits。
 
-### 内存溢出示例
+###### 内存溢出示例
 下面是一个测试演示，启动一个可以不断申请内存的应用，测试一个容器使用内存超过限额后，k8s将如何处理。deployment配置如下：
 ```yaml
 apiVersion: extensions/v1beta1 
@@ -108,8 +108,8 @@ test-oom-85b67d8699-nzjw2   1/1       Running   1          8m        10.244.0.13
 test-oom-85b67d8699-tsdcp   1/1       Running   0          8m        10.244.1.88    docker23
 ```
 
-### 硬盘资源
-#### emptyDir
+#### 硬盘资源
+###### emptyDir
 卷，该类型的挂载卷可以使用宿主机全部的硬盘空间，要注意的是，emptyDir类型的挂载卷生命周期持续到Pod终止，即使Pod内的容器重启或终止，只要Pod存活，该挂载卷也会一直存在。只有当Pod终止时，挂载卷的数据才会被清除。
 
 ```yaml
@@ -129,7 +129,7 @@ spec:
     emptyDir: {}
 ```
 
-#### PersistentVolume
+###### PersistentVolume
 持久卷，缩写为PV，是集群中的一块存储，跟Node一样，也是集群的资源。PV跟Volume(卷)类似，不过它有独立于Pod的生命周期，该类型挂载卷是永久存在于宿主机的。
 ```yaml
 kind: PersistentVolume         
@@ -155,7 +155,7 @@ spec:
 * ReadOnlyMany：该卷能够以只读模式加载到多个节点上。
 * ReadWriteMany：该卷能够以读写模式被多个节点同时加载。
 	
-#### PersistentVolumeClaim
+###### PersistentVolumeClaim
 持久卷申请，缩写为PVC，是用户对PV的一个请求，跟Pod类似。Pod消费Node的资源，PVC消费PV的资源。Pod 能够申请特定的资源（CPU和内存）；PVC能够申请特定的尺寸和访问模式（例如可以加载一个读写，或多个只读实例）。
 ```yaml
 kind: PersistentVolumeClaim    
@@ -171,7 +171,7 @@ spec:
       storage: 3Gi  
 ```
 
-#### 示例
+###### 示例
 在Pod中使用PVC，yaml配置文件如下：
 ```yaml
 kind: Pod
@@ -370,7 +370,7 @@ QoS是Quality of Service的缩写，即服务质量。为了实现资源被有�
 
 QoS主要分为Guaranteed、Burstable和Best-Effort三类，优先级从高到低。
 
-### Guaranteed
+#### Guaranteed
 属于该级别的pod有以下两种：
 1. Pod中的所有容器都且仅设置了CPU和内存的limits
 2. pod中的所有容器都设置了CPU和内存的requests和limits，且单个容器内的requests==limits（requests不等于0）
@@ -413,7 +413,7 @@ containers:
 ```
 容器foo和bar内resources的requests和limits均相等，该pod的QoS级别属于Guaranteed。
 
-### Burstable
+#### Burstable
 pod中只要有一个容器的requests和limits的设置不相同，该pod的QoS即为Burstable。
 
 容器foo指定了resource，而容器bar未指定
@@ -447,7 +447,7 @@ containers:
 
 **注意：若容器指定了requests而未指定limits，则limits的值等于节点resource的最大值；若容器指定了limits而未指定requests，则requests的值等于limits。**
 
-### Best-Effort
+#### Best-Effort
 如果Pod中所有容器的resources均未设置requests与limits，该pod的QoS即为Best-Effort。
 
 容器foo和容器bar均未设置requests和limits。
@@ -459,22 +459,23 @@ containers:
     resources:
 ```
 
-### 根据QoS进行资源回收策略
+#### 根据QoS进行资源回收策略
 Kubernetes通过cgroup给pod设置QoS级别，当资源不足时先kill优先级低的pod，在实际使用过程中，通过OOM分数值来实现，OOM分数值范围为0-1000。
 OOM分数值根据OOM_ADJ参数计算得出，对于Guaranteed级别的pod，OOM_ADJ参数设置成了-998，对于Best-Effort级别的pod，OOM_ADJ参数设置成了1000，对于Burstable级别的POD，OOM_ADJ参数取值从2到999。对于kuberntes保留资源，比如kubelet，docker，OOM_ADJ参数设置成了-999，表示不会被OOM kill掉。OOM_ADJ参数设置的越大，计算出来的OOM分数越高，表明该pod优先级就越低，当出现资源竞争时会越早被kill掉，对于OOM_ADJ参数是-999的表示kubernetes永远不会因为OOM将其kill掉。
 
-### QoS pods被kill掉场景与顺序
+#### QoS pods被kill掉场景与顺序
 Best-Effort pods：系统用完了全部内存时，该类型pods会最先被kill掉。
 Burstable pods：系统用完了全部内存，且没有Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。
 Guaranteed pods：系统用完了全部内存，且没有Burstable与Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。
 
-### QoS使用建议
+#### QoS使用建议
 如果资源充足，可将QoS pods类型均设置为Guaranteed。用计算资源换业务性能和稳定性，减少排查问题时间和成本。如果想更好的提高资源利用率，业务服务可以设置为Guaranteed，而其他服务根据重要程度可分别设置为Burstable或Best-Effort。
 
 ## 总结
 kubernetes中的资源是很大一块内容，本文还有些东西没有讲到，因为我也没搞清楚，有兴趣的可以去官网查阅文档了解下。
 
 参考：
+
 [https://feisky.gitbooks.io/kubernetes/concepts/quota.html](https://feisky.gitbooks.io/kubernetes/concepts/quota.html)
 [https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md)
 [http://dockone.io/article/2592](http://dockone.io/article/2592)
