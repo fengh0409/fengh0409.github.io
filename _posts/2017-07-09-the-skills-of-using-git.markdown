@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "git使用技巧"
-keywords:   "git,skills,使用技巧" 
+keywords:   "git回滚,git clone,git log,git使用技巧,git子模块" 
 description: "git的使用技巧和一些注意的地方"
 date:       2017-07-09
 published:  true 
@@ -11,6 +11,25 @@ tags:
 ---
 
 有些东西一段时间不用就特别容易忘，最近在使用git的时候老是要去查文档，所以在这里记录git的一些用法，以方便以后查阅。
+
+## 回滚
+对于已经push过的代码，回滚到某个版本，可以使用`git reset`和`git revert`两种方法。
+
+例如：远程提交记录是`A -> B -> C -> D`，要回滚到B那个版本：
+#### git reset
+```
+git reset --hard B
+git push origin master --force
+```
+因为reset过的当前分支版本落后远程分支，普通的push操作无法提交，必须加上`--force`参数来强制提交。执行上述操作后，远程提交记录会变为`A -> B`，`C` 和 `D` 的提交记录会被直接删除。
+#### git revert
+```
+git revert --hard B
+git push origin master 
+```
+执行`git revert`后，不需要加`--force`强制提交，`git push`之后，远程提交记录会变为`A -> B -> C -> D -> E`，其中，版本`E`的操作就是回滚`C`和`D`的代码。
+
+**总结：`git reset`会删除提交记录，对于确实不需要的历史记录使用`git reset`回滚可以使提交记录看起来更干净；而`git revert`会保留提交记录，可以保留整个分支的所有历史记录，方便以后再次回滚。具体使用哪个命令来回滚要根据实际使用场景。**
 
 ## 拉取远程新分支
 以前我要拉一个远程分支到本地，一般是通过`git pull origin b1:b1`这种方式来拉的，直到有天出现问题了才发现，`git pull`拉取的分支会和当前本地分支合并，比如我现在在master分支，执行`git pull origin b1:b1`时，git会将b1合并到master，因为`git pull`相当于`git fetch`+`git merge`，而我们往往不希望他们进行合并操作。因此，应通过以下方式拉取分支：
