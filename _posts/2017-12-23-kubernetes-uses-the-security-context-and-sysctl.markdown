@@ -18,6 +18,7 @@ tags:
 在kubernetes中有个字段叫`securityContext`，即`安全上下文`，它是用来定义Pod或Container的权限和访问控制设置的。其设置包括：
 
 * Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限。
+
 针对pod设置：
 ```
 apiVersion: v1
@@ -100,6 +101,7 @@ spec:
 * Seccomp: 限制一个进程访问文件描述符的权限。
 
 * AllowPrivilegeEscalation: 控制一个进程是否能比其父进程获取更多的权限，`AllowPrivilegeEscalation`的值是bool值，如果一个容器以privileged权限运行或具有`CAP_SYS_ADMIN`权限，则`AllowPrivilegeEscalation`的值将总是true。
+
 ```
 apiVersion: v1
 kind: Pod
