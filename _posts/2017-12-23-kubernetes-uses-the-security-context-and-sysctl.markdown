@@ -17,7 +17,7 @@ tags:
 ## Security Context
 在kubernetes中有个字段叫`securityContext`，即`安全上下文`，它是用来定义Pod或Container的权限和访问控制设置的。其设置包括：
 
-* Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限。
+* Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限
 
 针对pod设置：
 ```
@@ -67,7 +67,8 @@ securityContext:
     level: "s0:c123,c456"
 ```
 
-* Running as privileged or unprivileged：以`privileged`或`unprivileged`权限运行。
+* Running as privileged or unprivileged：以`privileged`或`unprivileged`权限运行
+
 ```
 apiVersion: v1
 kind: Pod
@@ -81,7 +82,8 @@ spec:
       privileged: true
 ```
 
-* Linux Capabilities: 给某个特定的进程privileged权限，而不用给root用户所有的`privileged`权限。
+* Linux Capabilities: 给某个特定的进程privileged权限，而不用给root用户所有的`privileged`权限
+
 ```
 apiVersion: v1
 kind: Pod
@@ -96,9 +98,9 @@ spec:
         add: ["NET_ADMIN", "SYS_TIME"]
 ```
 
-* AppArmor: 使用程序文件来限制单个程序的权限。
+* AppArmor: 使用程序文件来限制单个程序的权限
 
-* Seccomp: 限制一个进程访问文件描述符的权限。
+* Seccomp: 限制一个进程访问文件描述符的权限
 
 * AllowPrivilegeEscalation: 控制一个进程是否能比其父进程获取更多的权限，`AllowPrivilegeEscalation`的值是bool值，如果一个容器以privileged权限运行或具有`CAP_SYS_ADMIN`权限，则`AllowPrivilegeEscalation`的值将总是true。
 
@@ -204,6 +206,8 @@ spec:
   ...
 ```
 
+## 总结
+在容器中使用`privileged`的权限和`sysctl`指令有一定的安全隐患，使用不慎可能导致整个容器崩掉，相关信息可自行查阅。
 
 参考：
 
