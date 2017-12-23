@@ -20,6 +20,7 @@ tags:
 * Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限
 
 针对pod设置：
+
 ```
 apiVersion: v1
 kind: Pod
@@ -43,6 +44,7 @@ spec:
 ```
 
 针对container设置：
+
 ```
 apiVersion: v1
 kind: Pod
@@ -60,6 +62,7 @@ spec:
 ```
 
 * Security Enhanced Linux (SELinux): 给容器指定SELinux labels
+
 ```
 ...
 securityContext:
