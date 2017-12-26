@@ -16,7 +16,7 @@ tags:
 
 ## 编写一个go应用
 下面是一个打印Hello World的简单go应用：
-```go
+```
 //hello.go
 package main
 

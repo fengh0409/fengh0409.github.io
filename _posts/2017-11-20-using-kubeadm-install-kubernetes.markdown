@@ -36,7 +36,7 @@ kubeadm是kubernetes官方提供的快速安装kubernetes集群的工具，相�
 
 * 一些准备工作
 
-```shell
+```
 #关闭防火墙
 systemctl stop firewalld
 systemctl disable firewalld
@@ -57,7 +57,7 @@ swapoff -a
 
 ## 安装docker
 这里我安装的是`17.03.2.ce`版本
-```shell
+```
 #卸载已安装的docker
 yum list installed | awk '{print $1}' | grep docker | xargs yum -y remove
 
@@ -73,23 +73,23 @@ systemctl start docker
 ```
 
 Docker从1.13版本开始调整了默认的防火墙规则，禁用了iptables filter表中FOWARD链，这样会引起Kubernetes集群中跨node的pod无法通信，在各个Docker节点执行以下命令：
-```shell
+```
 iptables -P FORWARD ACCEPT
 ```
 
 这里建议在各个node将该命令加入到docker的启动配置中，在/etc/systemd/system/docker.service文件中加入以下内容：
-```shell
+```
 ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT
 ```
 
 然后重启docker:
-```shell
+```
 systemctl daemon-reload
 systemctl restart docker
 ```
 
 ## 配置代理
-```shell
+```
 #配置全局代理
 cat <<EOF >  ~/.bashrc
 export http_proxy=http://username:password@ip:port
@@ -110,7 +110,7 @@ systemctl restart docker
 
 ## 安装kubeadm、kubelet、kubectl
 配置谷歌yum源
-```shell
+```
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -123,7 +123,7 @@ EOF
 ```
 
 安装kubeadm、kubelet、kubectl
-```shell
+```
 yum install -y kubelet kubeadm kubectl
 systemctl daemon-reload
 systemctl enable kubelet
@@ -135,7 +135,7 @@ systemctl start kubelet
 查看docker的cgroup driver：`docker info|grep Cgroup`，kubelet的启动参数`--cgroup-driver`的默认值为cgroupfs，而yum安装kubeadm和kubelet时，生成的`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件将这个参数值改为了systemd。可以查看该文件的内容`cat  /etc/systemd/system/kubelet.service.d/10-kubeadm.conf|grep cgroup`。
 
 这里修改docker的cgroup driver为`systemd`
-```shell
+```
 cat << EOF > /etc/docker/daemon.json
 {
   "exec-opts": ["native.cgroupdriver=systemd"]
@@ -144,21 +144,21 @@ EOF
 ```
 
 重启docker
-```shell
+```
 systemctl daemon-reload
 systemctl restart docker
 ```
 
 ## 初始化
 指定安装k8s版本为v1.8.0，第二个参数值表明pod网络指定为flannel，更多参数可以查看help
-```shell
+```
 kubeadm init --kubernetes-version v1.8.0 --pod-network-cidr=10.244.0.0/16
 ```
 
 因为我安装的是单master的集群，所以只在主节点服务器执行该init操作，工作节点上不要执行。
 
 若初始化失败，执行以下命令清理一些可能存在的网络问题，然后重新初始化
-```shell
+```
 kubeadm reset
 ifconfig cni0 down
 ip link delete cni0
@@ -168,7 +168,7 @@ rm -rf /var/lib/cni/
 ```
 
 初始化完成后，你会看到如下的类似信息：
-```shell
+```
 [kubeadm] WARNING: kubeadm is in beta, please do not use it for production clusters.
 [init] Using Kubernetes version: v1.8.0
 [init] Using Authorization modes: [Node RBAC]
@@ -227,7 +227,7 @@ as root:
 
 ## 安装pod网络
 因为初始化的时候指定了flannel pod network，所以这里我安装的是flannel
-```shell
+```
 wget https://raw.githubusercontent.com/coreos/flannel/v0.9.0/Documentation/kube-flannel.yml
 kubectl apply -f kube-flannel.yml
 ```
@@ -253,19 +253,19 @@ containers:
 
 ## 开始使用
 pod网络配置好以后，需要配置常规用户访问k8s集群:
-```shell
+```
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 添加其他服务器作为工作节点，在其他服务器上执行初始化返回的命令，类似如下：
-```shell
+```
 kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>    
 ```
     
 节点添加成功后，会看到类似下面的输出：
-```shell
+```
 [kubeadm] WARNING: kubeadm is in beta, please do not use it for production clusters.
 [preflight] Running pre-flight checks
 [discovery] Trying to connect to API Server "10.138.0.4:6443"
@@ -289,12 +289,12 @@ Run 'kubectl get nodes' on the master to see this machine join.
 在主节点上查看所有节点状态：`kubectl get nodes`
 
 默认情况下，集群不会将pod调度到主节点，若想要调度到主节点，执行以下命令：
-```shell
+```
 kubectl taint nodes --all node-role.kubernetes.io/master-
 ```
 
 会看到类似下面的输出：
-```shell
+```
 node "test-01" untainted
 taint key="dedicated" and effect="" not found.
 taint key="dedicated" and effect="" not found.
@@ -307,7 +307,7 @@ taint key="dedicated" and effect="" not found.
 ## 部署dashboard
 dashboard是k8s官方出的一个插件，为集群管理提供了UI界面，很有用，搭建也非常简单。
 
-```shell
+```
 wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 kubectl create -f kubernetes-dashboard.yaml
 ```
@@ -331,7 +331,7 @@ spec:
 ```
 
 然后执行：`kubectl -n kube-system get service kubernetes-dashboard`，查看pod内443对外暴露的NodePort为30001：
-```shell
+```
 NAME                   TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
 kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP   4h
 ```
@@ -339,7 +339,7 @@ kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP  
 浏览器访问https://<Node-IP>:<NodePort>，会看到登录界面，这里需要一个token来登录，也可以点击`SKIP`跳过登录直接进入dashboard，不过看不到任何集群相关的信息。
 
 获取token：
-```shell
+```
 [root@bazingafeng]# kubectl get secret -n kube-system|grep kubernetes-dashboard-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 Name:         kubernetes-dashboard-token-qsgvh
 Namespace:    kube-system
@@ -387,7 +387,7 @@ subjects:
 执行 `kubectl create -f kubernetes-dashboard-admin.rbac.yaml`
 
 查看kubernete-dashboard-admin的token:
-```shell
+```
 kubectl get secret -n kube-system|grep kubernetes-dashboard-admin-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 ```
 

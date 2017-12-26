@@ -32,7 +32,7 @@ godep save
 │   └── main.go
 ```
 main.go源码：
-```go
+```
 package main
 
 import (
@@ -66,7 +66,7 @@ func main() {
 ```
 
 然后查看Godeps.json文件内容：
-```json
+```
 {
     "ImportPath": "myapp",
     "GoVersion": "go1.8",
@@ -176,7 +176,7 @@ github.com/shopspring/decimal  branch master  branch master  16a9418   16a9418  
 ```
 
 这个命令很有用，当我们在项目中引用了新的第三方包后，比如在上面的例子中新增seelog包：
-```go
+```
 package main
 
 import (
