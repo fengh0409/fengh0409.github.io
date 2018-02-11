@@ -140,9 +140,9 @@ args:
 在实际应用场景，常常会把多个服务部署在不同的namespace，来达到隔离服务的目的，比如A服务部署在namespace-A，B服务部署在namespace-B。这种情况下，就需要声明Ingress-A、Ingress-B两个Ingress分别用于暴露A服务和B服务，且Ingress-A必须处于namespace-A，Ingress-B必须处于namespace-B。否则Controller无法正确解析Ingress的规则。
 
 ## 总结
-> * 集群内可以声明多个Ingress和多个Ingress Controller
-> * 一个Ingress Controller可以监听多个Ingress
-> * Ingress和其定义的服务必须处于同一namespace
+* 集群内可以声明多个Ingress和多个Ingress Controller
+* 一个Ingress Controller可以监听多个Ingress
+* Ingress和其定义的服务必须处于同一namespace
 
 参考：  
 [https://github.com/kubernetes/ingress-nginx/blob/master/README.md](https://github.com/kubernetes/ingress-nginx/blob/master/README.md)  
