@@ -416,7 +416,7 @@ containers:
 #### Burstable
 pod中只要有一个容器的requests和limits的设置不相同，该pod的QoS即为Burstable。
 
-容器foo指定了resource，而容器bar未指定
+容器foo指定了resource，而容器bar未指定：
 ```yaml
 containers:
   name: foo
@@ -431,7 +431,7 @@ containers:
   name: bar
 ```
 
-容器foo设置了内存limits，而容器bar设置了CPU limits
+容器foo设置了内存limits，而容器bar设置了CPU limits：
 ```yaml
 containers:
   name: foo
@@ -450,7 +450,7 @@ containers:
 #### Best-Effort
 如果Pod中所有容器的resources均未设置requests与limits，该pod的QoS即为Best-Effort。
 
-容器foo和容器bar均未设置requests和limits。
+容器foo和容器bar均未设置requests和limits：
 ```yaml
 containers:
   name: foo
@@ -464,9 +464,9 @@ Kubernetes通过cgroup给pod设置QoS级别，当资源不足时先kill优先级
 OOM分数值根据OOM_ADJ参数计算得出，对于Guaranteed级别的pod，OOM_ADJ参数设置成了-998，对于Best-Effort级别的pod，OOM_ADJ参数设置成了1000，对于Burstable级别的POD，OOM_ADJ参数取值从2到999。对于kuberntes保留资源，比如kubelet，docker，OOM_ADJ参数设置成了-999，表示不会被OOM kill掉。OOM_ADJ参数设置的越大，计算出来的OOM分数越高，表明该pod优先级就越低，当出现资源竞争时会越早被kill掉，对于OOM_ADJ参数是-999的表示kubernetes永远不会因为OOM将其kill掉。
 
 #### QoS pods被kill掉场景与顺序
-Best-Effort pods：系统用完了全部内存时，该类型pods会最先被kill掉。
-Burstable pods：系统用完了全部内存，且没有Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。
-Guaranteed pods：系统用完了全部内存，且没有Burstable与Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。
+*Best-Effort pods：系统用完了全部内存时，该类型pods会最先被kill掉。   
+*Burstable pods：系统用完了全部内存，且没有Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。  
+*Guaranteed pods：系统用完了全部内存，且没有Burstable与Best-Effort类型的容器可以被kill时，该类型的pods会被kill掉。  
 
 #### QoS使用建议
 如果资源充足，可将QoS pods类型均设置为Guaranteed。用计算资源换业务性能和稳定性，减少排查问题时间和成本。如果想更好的提高资源利用率，业务服务可以设置为Guaranteed，而其他服务根据重要程度可分别设置为Burstable或Best-Effort。
