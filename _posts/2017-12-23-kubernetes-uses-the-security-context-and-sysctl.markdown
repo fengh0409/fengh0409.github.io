@@ -183,7 +183,7 @@ systemctl daemon-reload
 systemctl restart kubelet
 ```
 
-在Deployment中使用`unsafe sysctl`，开启privileged权限：
+在Pod中使用`unsafe sysctl`，开启privileged权限：
 
 ```
 apiVersion: v1
