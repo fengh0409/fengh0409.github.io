@@ -177,36 +177,25 @@ ExecStart=
 ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_SYSTEM_PODS_ARGS $KUBELET_NETWORK_ARGS $KUBELET_DNS_ARGS $KUBELET_AUTHZ_ARGS $KUBELET_CADVISOR_ARGS $KUBELET_CGROUP_ARGS $KUBELET_CERTIFICATE_ARGS $KUBELET_EXTRA_ARGS
 ```
 
-然后重启kubelet：
+重启kubelet：
 ```
 systemctl daemon-reload
 systemctl restart kubelet
 ```
 
-在deployment文件中使用`unsafe sysctl`：
-```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: sysctl-example
-  annotations:
-    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
-spec:
-  ...
-```
+在Deployment中使用`unsafe sysctl`，开启privileged权限：
 
-**注意：上面我们说过，容器内使用sysctl，需要开启privileged权限，因此需要设置pod或container的securityContext，加上`privileged: true`**
 ```
 apiVersion: v1
 kind: Pod
 metadata:
   name: sysctl-example
   annotations:
-    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
+    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535                 #使用unsafe sysctl，设置最大连接数
 spec:
   securityContext:
-    privileged: true
-  ...
+    privileged: true                                                                      #开启privileged权限
+  ...
 ```
 
 ## 总结
