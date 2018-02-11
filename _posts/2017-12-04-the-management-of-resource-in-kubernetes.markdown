@@ -12,7 +12,7 @@ tags:
 ---
 
 ## 什么是资源
-Kubernetes中，资源指的是可以被pod或容器“请求”,“分配”,“消费”的那些东西。例如：CPU，内存，硬盘。资源又分为可压缩资源和不可压缩资源，目前CPU是唯一支持的可压缩资源，内存和硬盘是不可压缩资源。对于CPU这种可压缩资源，如果pod中服务使用CPU超过限额，pod不会被kill掉但会被限制，而对于内存这种不可压缩资源，如果pod中服务使用内存超过限额，pod中容器的进程会因OOM（Out of Memory）被kernel kill掉。
+在Kubernetes中，资源指的是可以被pod或容器“请求”,“分配”,“消费”的那些东西。例如：CPU，内存，硬盘。资源又分为可压缩资源和不可压缩资源，目前CPU是唯一支持的可压缩资源，内存和硬盘是不可压缩资源。对于CPU这种可压缩资源，如果pod中服务使用CPU超过限额，该pod不会被kill掉但会被限制，而对于内存这种不可压缩资源，如果pod中服务使用内存超过限额，该pod中容器的进程会因OOM（Out of Memory）被kernel kill掉。
 
 ## 资源限制
 如果未做过节点nodeSelector、亲和性（node affinity）或pod亲和、反亲和性（pod affinity/anti-affinity）等[Pod高级调度策略设置](http://dockone.io/article/2635)，我们无法指定pod部署到指定机器上，这可能会造成CPU或内存等密集型的pod同时分配到相同节点，造成资源竞争。另一方面，如果未对资源进行限制，一些关键的服务可能会因为资源竞争因OOM等原因被kill掉，或者被限制使用CPU。
@@ -25,10 +25,10 @@ Kubernetes中，资源指的是可以被pod或容器“请求”,“分配”,�
 
 **注：requests设置范围是0到节点最大配置，即0 <= request <= Node Allocatable，而limits设置范围是requests到无穷大，即requests <= limits <= Infinity。**
 
-当给一个容器指定了resource requests时，调度器可以更好地决定将pod放在哪个node上。目前容器仅支持CPU和内存资源的requests和limits。
+当给一个容器指定了`resource requests`时，调度器可以更好地决定将pod放在哪个node上，目前容器仅支持CPU和内存资源的requests和limits。
 
 ###### 内存溢出示例
-下面是一个测试演示，启动一个可以不断申请内存的应用，测试一个容器使用内存超过限额后，k8s将如何处理。deployment配置如下：
+下面是一个测试内存溢出的示例，启动一个可以不断申请内存的应用，测试一个容器使用内存超过限额后，kubernetes将如何处理。Deployment配置如下：
 ```yaml
 apiVersion: extensions/v1beta1 
 kind: Deployment               
@@ -54,13 +54,13 @@ spec:
 ```
 该配置表示应用有3个pod，每个容器请求60MB内存、1颗CPU，限额1GB内存、2颗CPU
 
-创建deployment
+创建deployment：
 ```yaml
 [root@docker22 kubernetes]# kubectl create -f test-oom.yml 
 deployment "test-oom" created
 ```
 
-查看各个pod的状态
+查看各个pod的状态：
 ```
 [root@docker22 kubernetes]# kubectl get pod -o wide
 NAME                        READY     STATUS    RESTARTS   AGE       IP             NODE
@@ -245,19 +245,19 @@ spec:
 >最多可以声明10个PVC
 	
 ###使用示例
-创建myspace命名空间
+创建myspace命名空间：
 ```
 [root@docker22 kubernetes]# kubectl create namespace myspace
 namespace "myspace" created	
 ```
 
-创建myspace命名空间的资源配额对象
+创建myspace命名空间的资源配额对象：
 ```
 [root@docker22 kubernetes]# kubectl create -f resoureQuota.yml -n myspace
 resourcequota "resource-quotas" created
 ```
 
-查看该命名空间下资源配额占用情况
+查看该命名空间下资源配额占用情况：
 ```
 [root@docker22 kubernetes]# kubectl describe quota/resource-quotas -n myspace
 Name:                   resource-quotas
@@ -272,7 +272,7 @@ requests.cpu            0     1
 requests.memory         0     1Gi
 ```
 
-编写应用app-myspace.yaml配置，如下
+编写应用app-myspace.yaml配置，如下：
 ```yaml
 apiVersion: extensions/v1beta1 
 kind: Deployment               
@@ -297,20 +297,20 @@ spec:
             cpu: 500m
 ```
 
-创建deployment
+创建Deployment：
 ```
 [root@docker22 kubernetes]# kubectl create -f app-myspace.yml -n myspace
 deployment "app-myspace" created
 ```
 
-查看pod的状态，正常
+查看pod的状态，正常：
 [root@docker22 kubernetes]# kubectl get pod -n myspace -o wide
 NAME                              READY     STATUS    RESTARTS   AGE       IP             NODE
 app-myspace-7d64df76c7-8cpjj   1/1       Running   0          4m        10.244.0.135   docker22
 app-myspace-7d64df76c7-fb6xl   1/1       Running   0          4m        10.244.1.89    docker23
 app-myspace-7d64df76c7-p5w24   1/1       Running   0          4m        10.244.2.121   docker24
 
-查看资源配置占用情况
+查看资源占用情况：
 ```
 [root@docker22 kubernetes]# kubectl describe quota/resource-quotas -n myspace
 Name:                   resource-quotas
@@ -474,8 +474,7 @@ Guaranteed pods：系统用完了全部内存，且没有Burstable与Best-Effort
 ## 总结
 kubernetes中的资源是很大一块内容，本文还有些东西没有讲到，因为我也没搞清楚，有兴趣的可以去官网查阅文档了解下。
 
-参考：
-
-[https://feisky.gitbooks.io/kubernetes/concepts/quota.html](https://feisky.gitbooks.io/kubernetes/concepts/quota.html)
-[https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md)
-[http://dockone.io/article/2592](http://dockone.io/article/2592)
+参考：  
+[https://feisky.gitbooks.io/kubernetes/concepts/quota.html](https://feisky.gitbooks.io/kubernetes/concepts/quota.html)  
+[https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md)  
+[http://dockone.io/article/2592](http://dockone.io/article/2592)  
