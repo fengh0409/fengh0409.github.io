@@ -12,12 +12,12 @@ tags:
 ---
 
 ## 前言
-在项目的容器化中，有时候会需要修改内核参数，比如`net.`、`vm.`、`kernel`等，这就需要用到`sysctl`命令了，而在容器中使用该命令需要超级权限，容器启动时需要加上`--privileged`参数。那么在kubernetes中是如何使用的呢？
+在运行一个容器时，有时候需要使用`sysctl`修改内核参数，比如`net.`、`vm.`、`kernel`等，`sysctl`需要容器拥有超级权限，容器启动时加上`--privileged`参数即可。那么，在kubernetes中是如何使用的呢？
 
 ## Security Context
-在kubernetes中有个字段叫`securityContext`，即`安全上下文`，它是用来定义Pod或Container的权限和访问控制设置的。其设置包括：
+kubernetes中有个字段叫`securityContext`，即`安全上下文`，它用于定义Pod或Container的权限和访问控制设置。其设置包括：
 
-* Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限
+* **Discretionary Access Control: 根据用户ID（UID）和组ID（GID）来限制其访问资源（如：文件）的权限**
 
 针对pod设置：
 
@@ -61,7 +61,7 @@ spec:
       allowPrivilegeEscalation: false
 ```
 
-* Security Enhanced Linux (SELinux): 给容器指定SELinux labels
+* **Security Enhanced Linux (SELinux): 给容器指定SELinux labels**
 
 ```
 ...
@@ -70,7 +70,7 @@ securityContext:
     level: "s0:c123,c456"
 ```
 
-* Running as privileged or unprivileged：以`privileged`或`unprivileged`权限运行
+* **Running as privileged or unprivileged：以`privileged`或`unprivileged`权限运行**
 
 ```
 apiVersion: v1
@@ -85,7 +85,7 @@ spec:
       privileged: true
 ```
 
-* Linux Capabilities: 给某个特定的进程privileged权限，而不用给root用户所有的`privileged`权限
+* **Linux Capabilities: 给某个特定的进程privileged权限，而不用给root用户所有的`privileged`权限**
 
 ```
 apiVersion: v1
@@ -101,11 +101,11 @@ spec:
         add: ["NET_ADMIN", "SYS_TIME"]
 ```
 
-* AppArmor: 使用程序文件来限制单个程序的权限
+* **AppArmor: 使用程序文件来限制单个程序的权限**
 
-* Seccomp: 限制一个进程访问文件描述符的权限
+* **Seccomp: 限制一个进程访问文件描述符的权限**
 
-* AllowPrivilegeEscalation: 控制一个进程是否能比其父进程获取更多的权限，`AllowPrivilegeEscalation`的值是bool值，如果一个容器以privileged权限运行或具有`CAP_SYS_ADMIN`权限，则`AllowPrivilegeEscalation`的值将总是true。
+* **AllowPrivilegeEscalation: 控制一个进程是否能比其父进程获取更多的权限，`AllowPrivilegeEscalation`的值是bool值，如果一个容器以privileged权限运行或具有`CAP_SYS_ADMIN`权限，则`AllowPrivilegeEscalation`的值将总是true。**
 
 ```
 apiVersion: v1
@@ -126,7 +126,7 @@ spec:
 **注意：要开启容器的privileged权限，需要提前在`kube-apiserver`和`kubelet`启动时添加参数`--allow-privileged=true`，默认已添加。**
 		
 ## 使用sysctl
-获取所有sysctl参数列表`sysctl -a`
+`sysctl -a`可以获取sysctl所有参数列表。
 
 从v1.4开始，kubernetes将sysctl分为`safe`和`unsafe`，其对safe的sysctl定义如下：
 
@@ -134,15 +134,15 @@ spec:
 * 不会影响节点的正常运行
 * 不会获取超出`resource limits`范围的CPU和内存资源
 
-目前安全的sysctl有：
+目前属于`safe sysctl`的有：
 
 * kernel.shm_rmid_forced
 * net.ipv4.ip_local_port_range
 * net.ipv4.tcp_syncookies
 
-其余的都是不安全的sysctl，当kubelet支持更好的隔离机制时，安全的sysctl列表将在未来的Kubernetes版本中扩展。
+其余的都是`unsafe sysctl`，当kubelet支持更好的隔离机制时，`safe sysctl`列表将在未来的Kubernetes版本中扩展。
 
-使用`safe sysctl`:
+使用`safe sysctl`例子:
 ```
 apiVersion: v1
 kind: Pod
@@ -154,14 +154,14 @@ spec:
   ...
 ```
 
-使用`unsafe sysctl`，需要在kubelet启动参数通过`--experimental-allowed-unsafe-sysctls`指定，如`--experimental-allowed-unsafe-sysctls=net.core.somaxconn`，具体操作如下:
+而使用`unsafe sysctl`时，需要在kubelet的启动参数中指定`--experimental-allowed-unsafe-sysctls`，如`--experimental-allowed-unsafe-sysctls=net.core.somaxconn`，具体操作如下:
 
 编辑kubelet配置文件，修改`ExecStart=/usr/bin/kubelet`那一行，在后面加上`--experimental-allowed-unsafe-sysctls=net.core.somaxconn`，如：
 ```
 ExecStart=/usr/bin/kubelet --experimental-allowed-unsafe-sysctls=net.core.somaxconn
 ```
 
-因为我使用kubeadm安装的kubernetes，所以在`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件中加了倒数第3行内容：
+因为我是用kubeadm安装的kubernetes，所以在`/etc/systemd/system/kubelet.service.d/10-kubeadm.conf`文件中加了倒数第3行内容：
 ```
 [Service]
 Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
@@ -210,10 +210,8 @@ spec:
 ```
 
 ## 总结
-在容器中使用`privileged`的权限和`sysctl`指令有一定的安全隐患，使用不慎可能导致整个容器崩掉，相关信息可自行查阅。
+线上环境请谨慎使用`privileged`权限，使用不慎可能导致整个容器崩掉，相关信息可自行查阅。
 
-参考：
-
-[https://kubernetes.io/docs/concepts/cluster-administration/sysctl-cluster/](https://kubernetes.io/docs/concepts/cluster-administration/sysctl-cluster/)
-
-[https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+参考：  
+[https://kubernetes.io/docs/concepts/cluster-administration/sysctl-cluster/](https://kubernetes.io/docs/concepts/cluster-administration/sysctl-cluster/)  
+[https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)  
