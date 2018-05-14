@@ -3,12 +3,11 @@ layout:     post
 title:      "golang如何使用libgit2/git2go"
 keywords:   "libgit2,git2go,如何使用libgit2/git2go,golang" 
 description: "介绍golang中如何安装、使用libgit2/git2go"
-date:       2017-09-14
+date:       2018-05-14
 published:  true 
 catalog: true
 tags:
     - go 
-    - docker 
 ---
 
 `libgit2`是基于C语言实现的操作git的api，`git2go`是golang用来调用其api的包，GitHub地址[https://github.com/libgit2/git2go](https://github.com/libgit2/git2go)，目前也实现了多个语言版本，详见[https://libgit2.github.com](https://libgit2.github.com)
