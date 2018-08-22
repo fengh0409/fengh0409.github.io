@@ -17,7 +17,7 @@ go语言中的锁机制是通过自带的sync包来实现的，该包包含了�
 
 ## sync.Mutex
 Mutex是互斥锁，其定义方式很简单，先是定义了一个Mutex类型结构体，然后该类型实现了Lock()和Unlock()两个方法。
-```go
+```
 type Mutex struct {
     state int32
     sema  uint32
@@ -29,7 +29,7 @@ func (m *Mutex) Unlock()
 ```
 
 当一个变量被上了互斥锁后，其他访问该变量的线程会被堵塞，不可对该变量进行读写操作，直到锁被释放。下面是一个互斥锁的例子：
-```go
+```
 package main
 
 import (
@@ -58,7 +58,7 @@ func read(i int) {
 
 main函数里启了两个goroutine，调了两次read函数，无论哪个goroutine先执行，先调用read函数的会先获得互斥锁，而另一个goroutine在获取互斥锁时发现已经被占用了，其必须等待互斥锁被释放后才能获得该线程内的互斥锁，所以程序打印结果只会是以下两种:
 
-```go
+```
 1 begin lock
 2 begin lock
 1 in lock
@@ -81,7 +81,7 @@ main函数里启了两个goroutine，调了两次read函数，无论哪个gorout
 在上面的例子中，如果有很多goroutine并发执行的话就会存在一个问题，因为某个线程获得互斥锁后，其他的goroutine被堵塞，导致程序的效率较低，这种情况下就需要用到读写锁RWMutex了。
 
 RWMutex是基于互斥锁Mutex实现的，包含了读锁Rlock()和写锁Lock()，上读锁时，数据可以被多个goroutine并发访问但不可写，而上写锁时，数据不可被其他goroutine读或写。下面是其定义方式：
-```go
+```
 type RWMutex struct {
     w           Mutex  // held if there are pending writers
     writerSem   uint32 // semaphore for writers to wait for completing readers
@@ -100,7 +100,7 @@ func (*RWMutex) RUnlock
 ```
 
 我们将上面互斥锁的例子改写一下：
-```go
+```
 package main
 
 import (
@@ -142,7 +142,7 @@ func write(i int) {
 ```
 
 可能的打印结果：
-```go
+```
 2 begin write
 3 begin read
 1 begin read
@@ -160,7 +160,7 @@ func write(i int) {
 
 ## sync.Once
 某些情况下，多个goroutine并发执行时，我们希望goroutine中的某个函数只执行一次，这时候用Once就非常方便了。其定义方式如下：
-```go
+```
 type Once struct {
     m    Mutex
     done uint32
@@ -169,7 +169,7 @@ type Once struct {
 func (o *Once) Do(f func())
 ```
 该类型也是基于Mutex实现的，因为只会调用一次，其作用类似于init初始化函数，也往往用于初始化操作，请看下面的例子：
-```go
+```
 package main
 
 import (
@@ -193,14 +193,14 @@ func read() {
 }
 ```
 打印结果：
-```go
+```
 1
 ```
 最终只会打印出一次1。
 
 ## sync.WaitGroup
 WaitGroup用于等待一组goroutine执行完成，主线程调用Add方法来设置要等待的goroutine数量，每个goroutine运行后会调用Done方法，同时Wait方法会一直堵塞直到所有goroutine执行完成。
-```go
+```
 type WaitGroup struct {
     // contains filtered or unexported fields
 }
@@ -213,7 +213,7 @@ func (wg *WaitGroup) Wait()
 ```
 
 我们结合下面的例子来看看它是如何实现的：
-```go
+```
 package main
 
 import (
@@ -255,7 +255,7 @@ WaitGroup中存在一个计数器，其原理其实是通过这个计数器来�
 上述例子中，main函数执行时，Wait会一直堵塞，for循环开始都会调用一次Add(1)，使计数器加一，每个goroutine执行完成后会调用Done，使计数器减一，这个Done其实是调用了Add(-1)，大家可以查看下源码。这样，整个for循环跑完后计数器的值肯定是0，也就是说所有goroutine执行完了，然后堵塞的Wait会被释放，后面的程序会继续执行。
 
 根据以上结论，我们也可以将wg.Add()写在for循环外面：
-```go
+```
 func main() {
     var wg sync.WaitGroup
     var str = []string{
@@ -279,7 +279,7 @@ func main() {
 ```
 
 打印结果：
-```go
+```
 Hello, World
 Hello, Go
 Bye, PHP
@@ -287,7 +287,7 @@ Bye, PHP
 
 ## sync.Cond
 Cond的作用和WaitGroup是一样的，都是让goroutine堵塞，不同的是WaitGroup是被动堵塞，所有goroutine跑完后，wait会自动释放，而Cond是主动堵塞，我们必须给cond发送一个信号，来通知wait释放。
-```go
+```
 type Cond struct {
     noCopy noCopy
 
@@ -308,7 +308,7 @@ func (c *Cond) Wait()
 ```
 
 通过Cond的定义方式可以看到，通过调用NewCond函数来获得一个Cond对象，每个Cond都关联一个Locker L（通常是一个\*Mutex或\*RWMutex），在更改条件和调用Wait方法时必须持有该Locker。
-```go
+```
 package main
 
 import (
@@ -338,7 +338,7 @@ func main() {
 }
 ```
 这里的cond.Signal()就是用来发送一个信号给Wait来通知其释放的，sync.Cond还有一个BroadCast方法，用来通知释放所有堵塞的gouroutine。
-```go
+```
 package main
 
 import (
