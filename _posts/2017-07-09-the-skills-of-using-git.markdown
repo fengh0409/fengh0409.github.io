@@ -107,12 +107,15 @@ git clone --recursive mainProjectUrl
 ## 配置和取消代理
 ```
 git config --global https.proxy http://username:password@127.0.0.1:1080
-
 git config --global https.proxy https://username:password@127.0.0.1:1080
 
-git config --global --unset http.proxy
+# 或者
+git config --global http.proxy socks5://127.0.0.1:1080
+git config --global https.proxy socks5://127.0.0.1:1080
 
+git config --global --unset http.proxy
 git config --global --unset https.proxy
 ```
+
 
 （待续）
