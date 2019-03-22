@@ -104,4 +104,15 @@ git clone --recursive mainProjectUrl
 
 进入到子模块所在目录，通过`git branch`发现当前本地分支是处于一个游离的分支，我们首先需要checkout到一个本地分支：`git checkout master`，因为处于游离分支时，代码将无法提交，然后通过`git submodule update --remote --merge`来更新代码，如果忘记--merge，Git 会将子模块更新为服务器上的状态，并且会将项目当前分支重置为一个游离的分支。
 
+## 配置和取消代理
+```
+git config --global https.proxy http://username:password@127.0.0.1:1080
+
+git config --global https.proxy https://username:password@127.0.0.1:1080
+
+git config --global --unset http.proxy
+
+git config --global --unset https.proxy
+```
+
 （待续）
