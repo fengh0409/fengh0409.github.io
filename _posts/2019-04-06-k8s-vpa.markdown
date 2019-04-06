@@ -1,0 +1,348 @@
+---
+layout:     post
+title:      "k8s之vpa使用介绍"
+keywords:   "k8s,vpa" 
+description: "k8s,vpa"
+date:       2019-04-06
+published:  true 
+catalog: true
+tags:
+    - k8s
+---
+
+## 什么是VPA
+VPA 全称 `Vertical Pod Autoscaler`，即垂直 Pod 自动扩缩容，可以根据容器资源使用情况自动设置 CPU 和 内存 的请求值，从而允许在节点上进行适当的调度，以便为每个 Pod 提供适当的资源。它既可以缩小过度请求资源的容器，也可以根据其使用情况随时提升资源不足的容量。**注意：VPA 不会改变 Pod 的资源限制值**。
+
+## 为什么要使用VPA
+使用VPA可以带来以下好处：
+* 因为 Pod 完全用其所需，所以集群节点使用效率高。
+* Pod 会被安排到具有适当可用资源的节点上。
+* 不必运行耗时的基准测试任务来确定 CPU 和内存请求的合适值。
+* VPA 可以随时调整 CPU 和内存请求，而无需执行任何操作，因此可以减少维护时间。
+
+## 开始使用
+#### 使用VPA的先决条件
+* 确保集群中已经启用 `MutatingAdmissionWebhooks`，可以通过以下命令检测：
+```bash
+$ kubectl api-versions | grep admissionregistration
+admissionregistration.k8s.io/v1beta1
+```
+kubernetes 版本从 1.9 开始，`MutatingAdmissionWebhooks`是默认启用的。
+* 确保集群中部署了`Metrics Server`，若没有，可参考官方github部署。
+
+#### 部署Metrics Server
+```bash
+$ git clone https://github.com/kubernetes-incubator/metrics-server.git
+$ cd metrics-server
+
+一般使用以下命令即可一键部署：
+# Kubernetes > 1.8
+$ kubectl create -f deploy/1.8+/
+
+若kubernete版本比较旧（1.7），可用以下命令安装：
+# Kubernetes 1.7
+$ kubectl create -f deploy/1.7/
+```
+
+这里我部署完成后，查看 Metrics Server 的日志，发现无法获取到指标值：
+```bash
+$ kubectl logs -f metrics-server-67bd89c88d-hzqd4    -n kube-system
+E0215 09:51:18.038199       1 manager.go:102] unable to fully collect metrics: unable to fully scrape metrics from source kubelet_summary:k8s-dev-0-201: unable to fetch metrics from Kubelet k8s-dev-0-21 (k8s-dev-0-201): Get https://k8s-dev-0-201:10250/stats/summary/: dial tcp 220.250.3.201:10250: connect: connection timed out
+```
+查了一番后，仍然没有解决，相关issue：
+* [https://github.com/kubernetes-incubator/metrics-server/issues/130](https://github.com/kubernetes-incubator/metrics-server/issues/130)
+
+然后我把`deploy/1.8+/metrics-server-deployment.yaml` 文件中的镜像版本从`v0.3.1`改为了`v0.2.1`，并加入了以下command参数：
+```yaml
+command:
+   - /metrics-server
+   - --source=kubernetes:https://kubernetes.default
+```
+再次测试，可以获取到指标值。暂时没有查到为什么`v0.3.1`报错的原因。
+
+#### 部署VPA
+VPA 目前有两个版本，分别是 `0.2.x`和 `0.3.x`，`0.2.x`被称为 `alpha`版，`0.3.x`被称为 `beta`版，`apiVersion`也从 `poc.autoscaling.k8s.io/v1alpha1` 变为了 `
+autoscaling.k8s.io/v1beta1`。
+
+安装步骤如下：
+```bash
+$ git clone https://github.com/kubernetes/autoscaler.git
+$ cd autoscaler/vertical-pod-autoscaler
+$ ./hack/vpa-up.sh
+```
+> **注意**：vpa-up.sh 脚本会读取当前的环境变量：`$REGISTRY` 和 `$TAG`，分别是镜像仓库地址和镜像版本，默认分别是 `k8s.gcr.io`和 `0.3.1`。由于网络的原因，我们无法拉取`k8s.gcr.io`的镜像，因此建议修改 `$REGISTRY`为国内可访问的镜像仓库地址。
+
+若已经安装了 `alpha`版本的 VPA，想要升级到 `beta`版本，最安全的方法是通过 `vpa-down.sh`脚本删除老版本，然后通过 `vpa-up.sh`脚本安装新版本。
+
+若没有修改镜像地址，执行 `vpa-up.sh`脚本后，有以下三个镜像可能无法成功拉取：
+```bash
+k8s.gcr.io/vpa-recommender:0.3.1
+k8s.gcr.io/vpa-updater:0.3.1
+k8s.gcr.io/vpa-admission-controller:0.3.1
+```
+
+可以通过以下两种方式获取镜像：
+1. 配置 Docker 代理
+2. 获取其他镜像源，参考 [https://github.com/anjia0532/gcr.io_mirror](https://github.com/anjia0532/gcr.io_mirror)
+
+检查 VPA 组件是否正常运行：
+```bash
+$ kubectl --namespace=kube-system get pods|grep vpa
+vpa-admission-controller-dfc9bf76d-bq26q   1/1        Running   0          23h
+vpa-recommender-75dc447cdc-lr2h4             1/1        Running   0          23h
+vpa-updater-675cb7944c-d45nz                      1/1        Running   0          23h
+```
+
+#### 仅获取资源推荐不更新Pod示例
+###### 创建 Deployment
+声明一个有 2 个副本，没有资源申请的 Deployment，保存为`my-rec-deployment.yaml`
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-rec-deployment
+  labels:
+    purpose: try-recommend
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        purpose: try-recommend
+    spec:
+      containers:
+      - name: my-rec-container
+        image: nginx:latest
+```
+
+创建该 Deployment
+```yaml
+kubectl create -f my-rec-deployment.yaml
+```
+
+###### 创建 VPA
+声明一个更新策略为 `Off`的 VPA，保存为 `my-rec-vpa.yaml`
+```yaml
+apiVersion: autoscaling.k8s.io/v1beta1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-rec-vpa
+spec:
+  selector:
+    matchLabels:
+      purpose: try-recommend
+  updatePolicy:
+    updateMode: "Off"
+```
+
+创建该 VPA
+```yaml
+kubectl create -f my-rec-vpa.yaml
+```
+
+等待几分钟后，查看该 VPA 的详细信息
+```yaml
+kubectl get vpa my-rec-vpa -o yaml
+```
+
+```yaml
+...
+  recommendation:
+    containerRecommendations:
+    - containerName: my-rec-container
+      lowerBound:
+        cpu: 25m
+        memory: 262144k
+      target:
+        cpu: 25m
+        memory: 262144k
+      upperBound:
+        cpu: 25m
+        memory: 262144k
+...
+```
+
+其中`lowerBound` 、`target`、`upperBound` 分别表示 `下限值`、`推荐值`、`上限值`，上述结果表明，推荐的 Pod 的 CPU 请求为 25m，推荐的内存请求为 262144k 字节。
+
+VPA 使用 `lowerBound` 和 `upperBound` 来决定是否删除 Pod 并使用推荐值重新创建。如果 Pod 的请求小于下限或大于上限，则 VPA 将删除 Pod 并重新创建。
+
+因为这里设置 VPA 的更新策略为`Off`，所以对应 Pod 的资源请求不会自动更新。下面来测试自动更新资源请求。
+
+#### 自动更新Pod资源请求示例
+###### 创建 Deployment
+* 声明一个有 2 个副本，CPU 请求 100m，内存请求 50Mi 的 Deployment，保存为`my-deployment.yaml`
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-deployment
+  labels:
+    purpose: try-auto-requests
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        purpose: try-auto-requests
+    spec:
+      containers:
+      - name: my-container
+        image: alpine:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do timeout 0.5s yes >/dev/null; sleep 0.5s; done"]
+```
+
+创建 Deployment
+```yaml
+kubectl create -f my-deployment.yaml
+```
+
+然后监听对应 Pod 的状态
+```bash
+$ kubectl get pod -w|grep my-deployment
+my-deployment-79f7977c8-hrnt4        1/1       Running             0          44s
+my-deployment-79f7977c8-r27kk        1/1       Running             0          44s
+```
+
+###### 创建 VPA
+打开一个新的 Xshell 窗口
+* 声明一个更新策略为 `Auto`的 VPA，保存为 `my-vpa.yaml`
+```yaml
+apiVersion: autoscaling.k8s.io/v1beta1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-vpa
+spec:
+  selector:
+    matchLabels:
+      purpose: try-auto-requests
+  updatePolicy:
+    updateMode: "Auto"
+```
+
+创建 VPA
+```yaml
+kubectl create -f my-vpa.yaml
+```
+
+等待几分钟后，获取该 VPA 的详细信息
+```yaml
+kubectl get vpa my-vpa -o yaml
+```
+
+```yaml
+...
+  recommendation:
+    containerRecommendations:
+    - containerName: my-container
+      lowerBound:
+        cpu: 25m
+        memory: 262144k
+      target:
+        cpu: 35m
+        memory: 262144k
+      upperBound:
+        cpu: 117m
+        memory: 262144k
+```
+
+同时刚刚监听 Pod 的窗口可以看到对应的 Pod 重启了
+```bash
+$ kubectl get pod -w|grep my-deployment
+my-deployment-79f7977c8-hrnt4        1/1       Running             0          44s
+my-deployment-79f7977c8-r27kk        1/1       Running             0          44s
+my-deployment-79f7977c8-r27kk   1/1       Terminating   0         2m
+my-deployment-79f7977c8-r27kk   1/1       Terminating   0         2m
+my-deployment-79f7977c8-29kl9   0/1       Pending   0         0s
+my-deployment-79f7977c8-29kl9   0/1       Pending   0         1s
+my-deployment-79f7977c8-29kl9   0/1       ContainerCreating   0         1s
+my-deployment-79f7977c8-29kl9   1/1       Running   0         20s
+my-deployment-79f7977c8-hrnt4   1/1       Terminating   0         3m
+my-deployment-79f7977c8-hrnt4   1/1       Terminating   0         3m
+my-deployment-79f7977c8-558bg   0/1       Pending   0         0s
+my-deployment-79f7977c8-558bg   0/1       Pending   0         0s
+my-deployment-79f7977c8-558bg   0/1       ContainerCreating   0         1s
+my-deployment-79f7977c8-558bg   1/1       Running   0         16s
+```
+
+查看 event 事件消息
+```bash
+$ kubectl get event|grep my-deployment
+9s          9s           1         my-deployment-79f7977c8-hrnt4.1583ca6f62741cc3   Pod                                                       Normal    EvictedByVPA             vpa-updater                 Pod was evicted by VPA Updater to apply resource recommendation.
+4s          4s           2         my-deployment-79f7977c8-hrnt4.1583ca70a5ea6637   Pod                       spec.containers{my-container}   Normal    Killing                  kubelet, k8s-dev-0-21       Killing container with id docker://my-container:Need to kill Pod
+```
+
+其中，vpa-updater Pod was evicted by VPA Updater to apply resource recommendation 表明由于要更新资源请求，Pod 被 VPA Updater驱逐了。
+
+查看重启后的 Pod 详细信息
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    vpaUpdates: 'Pod resources updated by my-vpa: container 0: cpu request, memory request'
+spec:
+    ...
+    resources:
+      requests:
+        cpu: 35m
+        memory: 262144k
+    ...
+```
+
+可以看到，Pod 的 CPU 和 内存 请求都已经改变，请求值就是 VPA 中 target，而且 Pod 的annotations也多了一行 `vpaUpdates`，表明该 Pod 是由 VPA 更新的。
+
+**注意： 需要使用 VPA 的 Pod 必须属于副本集，比如属于 Deployment 或 StatefulSet，这样才能保证 Pod 被驱逐后能自动重启，也就是说部署了 Pod 类型的应用后，VPA 无法更新其资源请求，但 VPA 对象中仍然会显示推荐的资源，这时只能手动删除 Pod，然后重新创建，VPA Admission Controller拦截后才能更改 Pod 的请求值。**
+
+
+## 原理
+#### VPA 更新策略
+VPA 有以下四种更新策略：
+* Initial：仅在 Pod 创建时修改资源请求，以后都不再修改。
+* Auto：默认策略，在 Pod 创建时修改资源请求，并且在 Pod 更新时也会修改。
+* Recreate：类似 `Auto`，在 Pod 的创建和更新时都会修改资源请求，不同的是，只要Pod 中的请求值与新的推荐值不同，VPA 都会驱逐该 Pod，然后使用新的推荐值重新启一个。因此，一般不使用该策略，而是使用 `Auto`，除非你真的需要保证请求值是最新的推荐值。
+* Off：不改变 Pod 的资源请求，不过仍然会在 VPA 中设置资源的推荐值。
+
+若要禁止 VPA 修改 Pod 的请求资源，有以下三种方式：
+1. 将 VPA 的更新策略改为 `Off`
+2. 删除 VPA
+3. 去除 Pod 的 label，使其不再被 VPA 匹配到
+
+> **注意：** 禁用 VPA 后，处于运行状态的 Pod 的资源请求值仍然是 VPA 的推荐值，只有更新 Pod 后，才会使用指定的请求值。
+
+#### VPA 组件
+VPA 主要包含三个组件：
+* Admission Controller
+* Recommender
+* Updater
+
+###### Admission Controller
+Admission Controller 会拦截所有 Pod 的创建请求，如果 Pod 和某个 VPA 匹配且该 VPA 的更新策略不为 `Off`，Admission Controller 会使用推荐值修改 Pod 的资源请求，否则不会修改。
+
+Admission Controller 从 Recommender 获取资源的推荐值，如果获取超时或失败，则会使用缓存在对应 VPA 中的推荐值，如果这个推荐值也无法获取，则使用 Pod 指定的请求值。
+
+> **注意：** 以后可能通过将 Pod 标记为 "requiring VPA" 来强制使用 VPA，在创建相应的 VPA 之前将不会调度Pod。
+
+###### Recommender
+Recommender 负责计算推荐资源，该组件启动时会获取所有 Pod 的历史资源利用率（无论是否使用了VPA），以及历史存储（如Promethues，通过参数配置）中的 Pod OOM 事件的历史记录，然后聚合这些数据并存储在内存中。
+
+Recommender 会监听集群中的所有 Pod 和 VPA ，对于和某个 VPA 匹配的Pod，它会计算推荐的资源并在对应 VPA 中设置推荐值。
+
+###### Updater
+Updater 监听集群中的所有 Pod 和 VPA，通过调用 Recommender API 定期获取 VPA 中的推荐值，当一个 Pod 的推荐资源与实际配置的资源相差较大时，Updater 会驱逐这个 Pod（注意：Updater并不负责 Pod 资源的更新），Pod 被其控制器重新创建时，Admission Controller 会拦截这个创建请求，并使用推荐值修改请求值，然后 Pod 使用推荐值被创建。
+
+
+###### 工作流程图
+![vertical-pod-autoscaler.png](/img/2019/04/vertical-pod-autoscaler.png)
+
+
+## 参考
+* [https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler)
+* [https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/vertical-pod-autoscaler.md](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/autoscaling/vertical-pod-autoscaler.md)
+* [https://cloud.google.com/kubernetes-engine/docs/concepts/verticalpodautoscaler?hl=zh-cn](https://cloud.google.com/kubernetes-engine/docs/concepts/verticalpodautoscaler?hl=zh-cn)
+* [https://banzaicloud.com/blog/k8s-vertical-pod-autoscaler/](https://banzaicloud.com/blog/k8s-vertical-pod-autoscaler/)
+
