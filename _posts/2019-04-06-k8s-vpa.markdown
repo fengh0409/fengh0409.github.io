@@ -49,16 +49,35 @@ $ kubectl create -f deploy/1.7/
 $ kubectl logs -f metrics-server-67bd89c88d-hzqd4    -n kube-system
 E0215 09:51:18.038199       1 manager.go:102] unable to fully collect metrics: unable to fully scrape metrics from source kubelet_summary:k8s-dev-0-201: unable to fetch metrics from Kubelet k8s-dev-0-21 (k8s-dev-0-201): Get https://k8s-dev-0-201:10250/stats/summary/: dial tcp 220.250.3.201:10250: connect: connection timed out
 ```
-查了一番后，仍然没有解决，相关issue：
-* [https://github.com/kubernetes-incubator/metrics-server/issues/130](https://github.com/kubernetes-incubator/metrics-server/issues/130)
 
-然后我把`deploy/1.8+/metrics-server-deployment.yaml` 文件中的镜像版本从`v0.3.1`改为了`v0.2.1`，并加入了以下command参数：
+解决方法：
+
+修改deploy/1.8+/metrics-server-deployment.yaml文件，加入以下内容：
 ```yaml
+...
 command:
-   - /metrics-server
-   - --source=kubernetes:https://kubernetes.default
+- /metrics-server
+- --kubelet-preferred-address-types=InternalIP
+...
 ```
-再次测试，可以获取到指标值。暂时没有查到为什么`v0.3.1`报错的原因。
+相关issue：
+* [https://github.com/kubernetes-sigs/metrics-server/issues/131#issuecomment-418081930](https://github.com/kubernetes-sigs/metrics-server/issues/131#issuecomment-418081930)
+
+重新部署之后又遇到以下报错：
+```
+E1229 07:09:05.013998 1 summary.go:97] error while getting metrics summary from Kubelet kube-node3(10.204.0.21:10250): Get https://10.204.0.21:10250/stats/summary/: x509: cannot validate certificate for 10.204.0.21 because it doesn't contain any IP SANs
+```
+
+这个是证书的问题，可以修改deployment文件，给metrics-server启动命令加入 kubelet-insecure-tls 参数解决：
+```yaml
+...
+command:
+- /metrics-server
+- --kubelet-preferred-address-types=InternalIP
+- --kubelet-insecure-tls
+...
+```
+当然，更加安全的方式是使用证书。
 
 #### 部署VPA
 VPA 目前有两个版本，分别是 `0.2.x`和 `0.3.x`，`0.2.x`被称为 `alpha`版，`0.3.x`被称为 `beta`版，`apiVersion`也从 `poc.autoscaling.k8s.io/v1alpha1` 变为了 `
