@@ -4,7 +4,7 @@ title:      "kubernetes使用securityContext和sysctl"
 keywords:   "privileged,security context,sysctl in kubernetes" 
 description: "kubernetes使用设置privileged的"
 date:       2017-12-23
-published:  true 
+published:  false
 catalog: true
 tags:
     - k8s 
