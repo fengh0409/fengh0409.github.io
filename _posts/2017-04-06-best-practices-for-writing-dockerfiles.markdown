@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "编写Dockerfile最佳实践（译）"
+title:      "编写Dockerfile最佳实践"
 keywords:   "dockerfile,最佳实践,经验" 
 description: "编写dockerfiles最佳实践"
 date:       2017-04-06
