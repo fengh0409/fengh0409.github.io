@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "kubernetes部署ingress"
+title:      "Kubernetes部署Ingress"
 keywords:   "ingress,ingress controller,deploy" 
 description: "kubernetes部署ingress"
 date:       2018-02-10

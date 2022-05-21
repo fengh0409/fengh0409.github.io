@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "golang如何使用libgit2/git2go"
+title:      "Go如何使用libgit2/git2go"
 keywords:   "libgit2,git2go,如何使用libgit2/git2go,golang" 
 description: "介绍golang中如何安装、使用libgit2/git2go"
 date:       2018-05-14

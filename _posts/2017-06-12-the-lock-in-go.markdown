@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "go的锁机制"
+title:      "Go的锁机制"
 keywords:   "sync,Mutex,RWMutex,WaitGroup,锁,lock,go" 
 description: "详细描述go语言的锁机制"
 date:       2017-06-12

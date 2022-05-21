@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "composer使用与原理分析"
+title:      "Composer使用与原理分析"
 keywords:   "composer,composer使用,原理,autoload,自动加载" 
 description: "composer的使用和原理分析，自动加载"
 date:       2016-10-27

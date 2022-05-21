@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "php使用imagecopy添加水印丢失透明度的问题"
+title:      "PHP使用imagecopy添加水印丢失透明度的问题"
 keywords:   "php,imagecopy,imagecopymerge,水印,透明度,transparent" 
 description: "使用imagecopy给图片添加水印丢失透明度的解决方案"
 date:       2017-02-25

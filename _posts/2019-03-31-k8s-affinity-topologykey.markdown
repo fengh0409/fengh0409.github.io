@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "k8s之pod亲和性与反亲和性的topologyKey"
+title:      "Kubernetes之Pod亲和性与反亲和性的TopologyKey"
 keywords:   "k8s,topologyKey,topology,pod affinity,可用区" 
 description: "亲和性与反亲和性的可用区"
 date:       2019-03-31

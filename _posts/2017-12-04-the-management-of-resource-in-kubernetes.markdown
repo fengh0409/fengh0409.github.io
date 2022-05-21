@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "kubernetes的资源管理"
+title:      "Kubernetes的资源管理"
 keywords:   "kubernetes,资源管理,资源配额,资源限制,resource quotas,qos" 
 description: "kubernetes资源管理"
 date:       2017-12-04

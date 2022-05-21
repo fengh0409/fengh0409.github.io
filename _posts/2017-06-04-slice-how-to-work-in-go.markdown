@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "详解go的slice及其工作原理"
+title:      "详解Go的slice及其工作原理"
 keywords:   "切片,数组,slice,slice工作原理" 
 description: "详细解析go中slice的工作原理"
 date:       2017-06-04

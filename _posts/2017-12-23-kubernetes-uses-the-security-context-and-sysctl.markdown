@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "kubernetes使用securityContext和sysctl"
+title:      "Kubernetes使用SecurityContext和Sysctl"
 keywords:   "privileged,security context,sysctl in kubernetes" 
 description: "kubernetes使用设置privileged的"
 date:       2017-12-23

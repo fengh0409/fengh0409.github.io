@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "golang之ioutil.ReadAll()读取标准输出的问题"
+title:      "Go的ioutil.ReadAll()读取标准输出的问题"
 keywords:   "command,stdout,stderr,readall,combinedoutput,blocked,读取标准输出挂起" 
 description: "ioutil.ReadAll读取标准输出问题"
 date:       2018-05-20

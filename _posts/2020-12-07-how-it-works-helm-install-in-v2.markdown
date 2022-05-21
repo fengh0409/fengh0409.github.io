@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "helm install源码阅读"
+title:      "Helm install源码阅读"
 keywords:   "helm install, helm install源码, helm install原理" 
 description: "helm install源码阅读，了解helm install详细过程"
 date:       2020-12-07

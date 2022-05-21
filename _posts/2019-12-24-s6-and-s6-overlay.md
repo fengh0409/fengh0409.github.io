@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "容器进程管理之s6和s6-overlay"
+title:      "容器进程管理之S6和S6-overlay"
 keywords:   "s6,s6-overlay,docker进程管理" 
 description: "s6和s6-overlay"
 date:       2019-12-24

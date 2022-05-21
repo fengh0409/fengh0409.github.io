@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "golang并发控制"
+title:      "Go的并发控制"
 keywords:   "go,并发,并发控制,concurrent" 
 description: "golang并发控制，控制goroutine数量"
 date:       2019-04-07

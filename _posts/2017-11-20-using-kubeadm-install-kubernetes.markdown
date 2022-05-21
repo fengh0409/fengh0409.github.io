@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "使用kubeadm安装kubernetes"
+title:      "使用Kubeadm安装Kubernetes集群"
 keywords:   "kubeadm,kubernetes,k8s" 
 description: "kubeadm安装kubernetes集群"
 date:       2017-11-20

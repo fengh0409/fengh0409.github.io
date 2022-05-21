@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "git使用技巧"
+title:      "Git使用技巧"
 keywords:   "git回滚,git clone,git log,git使用技巧,git子模块" 
 description: "git的使用技巧和一些注意的地方"
 date:       2017-07-09

@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "go的包管理工具godep和dep"
+title:      "Go的包管理工具godep和dep"
 keywords:   "godep,dep,go包管理" 
 description: "go的包管理工具，godep和dep"
 date:       2017-07-11

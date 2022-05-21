@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "使用docker搭建mongodb集群"
+title:      "使用Docker搭建Mongodb集群"
 keywords:   "mongodb cluster,docker" 
 description: "详细讲述docker搭建mongodb副本集集群"
 date:       2017-06-19

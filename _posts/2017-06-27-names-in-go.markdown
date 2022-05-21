@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "go的变量命名"
+title:      "Go的变量命名"
 keywords:   "go变量,命名" 
 description: "如何命名一个变量，使其更易读"
 date:       2017-06-27
