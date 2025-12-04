@@ -193,7 +193,7 @@ app.provider('myProvider', function() {
 
 ```javascript
 app.config('myProviderProvider', function(myProviderProvider) {
-    myProviderProvider.modifyHost('http://GaryFeng.com')
+    myProviderProvider.modifyHost('http://fengh0409.github.io')
 })
 ```
 
@@ -203,7 +203,7 @@ app.controller('myController', ['$scope', 'myProvider', function($scope, myProvi
     $scope.myHost = myProvider
 }])
 ```
-将会得到结果`your host is http://GaryFeng.com`
+将会得到结果`your host is http://fengh0409.github.io`
 
 可能大家注意到，config中注入myProvider时多加了一个 provider ，为什么呢？这是为了识别 provider 服务。
 

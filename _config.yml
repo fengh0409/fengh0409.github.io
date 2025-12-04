@@ -3,9 +3,9 @@ title: GaryFeng
 SEOTitle: GaryFeng 的个人博客
 header-img: img/home-bg.jpg
 email: fengh0409@gmail.com
-description: "冯辉个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源"
-keyword: "冯辉, GaryFeng, 冯辉个人博客, Blog, PHP, Web服务器"
-url: "http://GaryFeng.com"              # your host, for absolute URL
+description: "fengh0409个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源"
+keyword: "fengh0409, GaryFeng, fengh0409个人博客, Blog, PHP, Web服务器"
+url: "http://fengh0409.github.io"              # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 
@@ -73,16 +73,3 @@ sidebar-avatar: /img/avatar-bazinga.jpg      # use absolute URL, seeing it's use
 # Featured Tags
 featured-tags: true                     # whether or not using Feature-Tags
 featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
-
-
-
-# Friends
-#friends: [
-#    {
-#        title: "阮一峰",
-#        href: "http://www.ruanyifeng.com"
-#    },{
-#        title: "酷壳",
-#        href: "http://coolshell.cn"
-#    }
-#]

@@ -77,7 +77,7 @@ HMACSHA256(
 
 最后将`Header`、`Payload`、`Signature`三部分以 `.` 拼接，获得的字符串就是JWT，也就是通常所说的token。
 
-**注意：上面Header和Payload使用的编码都是Base64URL，而不是Base64。因为JWT有时会以参数的形式放在URL中，如http://GaryFeng.com/?token=xxx ，而Base64编码后的字符串有三个字符`+`、`/`、`=`，这三个字符在URL中有特殊含义，可能会导致一些问题。而Base64URL编码后的字符串将这三个字符分别使用`-`、`_`、`空格`进行了替换，使得token可以作为URL的参数。**
+**注意：上面Header和Payload使用的编码都是Base64URL，而不是Base64。因为JWT有时会以参数的形式放在URL中，如http://fengh0409.github.io/?token=xxx ，而Base64编码后的字符串有三个字符`+`、`/`、`=`，这三个字符在URL中有特殊含义，可能会导致一些问题。而Base64URL编码后的字符串将这三个字符分别使用`-`、`_`、`空格`进行了替换，使得token可以作为URL的参数。**
 
 ## JWT工作原理
 JWT是如何验证客户端传过来的token的？
@@ -94,7 +94,7 @@ Authorization: Bearer <token>
 
 当然也可以直接在URL中以参数的形式传递。
 ```
-http://GaryFeng.com/?token=xxx
+http://fengh0409.github.io/?token=xxx
 ```
 
 注意：不建议将token以Cookie的形式传递给服务端，因为这会存在跨域问题，也可能会有CSRF攻击的风险，而放在请求头中就不会有这样的问题。
