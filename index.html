@@ -4,14 +4,20 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="keywords" content="冯辉, Bazingafeng, 冯辉个人博客, Blog, PHP, Web服务器">
+  <meta name="keywords" content="冯辉, GaryFeng, 冯辉个人博客, Blog, PHP, Web服务器">
   <meta name="description" content="冯辉个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源">
   <link rel="shortcut icon" href="img/favicon.ico">
-  <title>Bazingafeng 的个人博客</title>
+  <title>GaryFeng 的个人博客</title>
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/bazinga-blog.css">
   <link rel="stylesheet" href="css/syntax.css">
   <link href="//cdn.staticfile.org/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <style>
+    body.detail-view #about-section{display:none!important}
+    .catalog-container{display:none}
+    body.detail-view .catalog-container{display:block}
+    body:not(.detail-view) .catalog-container{display:none!important}
+  </style>
 </head>
 <body ontouchstart="">
 
@@ -25,12 +31,13 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="./">Bazingafeng</a>
+      <a class="navbar-brand" href="./">GaryFeng</a>
     </div>
     <div id="huxblog_navbar">
       <div class="navbar-collapse">
         <ul class="nav navbar-nav navbar-right">
           <li><a href="./">Home</a></li>
+          <li><a href="tags.html">TAG</a></li>
         </ul>
       </div>
     </div>
@@ -44,11 +51,19 @@
         
       </div>
       <div class="col-lg-3 col-lg-offset-0 col-md-3 col-md-offset-0 col-sm-12 col-xs-12 sidebar-container">
-        <section class="visible-md visible-lg">
+        <section class="visible-md visible-lg catalog-container" style="display:none;">
+          <hr>
+          <h5><a href="#">文章目录</a></h5>
+          <div class="side-catalog" id="side-catalog">
+            <div class="catalog-toggle"></div>
+            <ul class="catalog-body" id="catalog-body"></ul>
+          </div>
+        </section>
+        <section class="visible-md visible-lg" id="about-section">
           <hr><h5><a href="#">ABOUT ME</a></h5>
           <div class="short-about">
             <img src="/img/avatar-bazinga.jpg" />
-            <p>Bazingafeng,Hello World开发攻城狮，技术栈:PHP+GO+DOCKER，擅长使用各种流行语言构建Hello World应用程序，写代码一定要查文档一定要Google一定要GitHub一定要Stack Overflow，现在杭州一家金融互联网公司敲键盘。</p>
+            <p>GaryFeng,Hello World开发攻城狮，技术栈:PHP+GO+DOCKER，擅长使用各种流行语言构建Hello World应用程序，写代码一定要查文档一定要Google一定要GitHub一定要Stack Overflow，现在杭州一家金融互联网公司敲键盘。</p>
             <ul class="list-inline">
               <li>
                 <a target="_blank" href="https://github.com/fengh0409">
@@ -80,7 +95,7 @@
             </a>
           </li>
         </ul>
-        <p class="copyright text-muted">Copyright © Bazingafeng <span id="year"></span></p>
+        <p class="copyright text-muted">Copyright © GaryFeng <span id="year"></span></p>
       </div>
     </div>
   </div>

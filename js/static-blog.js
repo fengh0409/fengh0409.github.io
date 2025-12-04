@@ -47,12 +47,16 @@
         <p><a href="#" class="btn btn-link">← 返回列表</a></p>
       </div>
     `
+    document.body.classList.add('detail-view')
     const body = $('#post-body')
     if (window.marked) {
       body.innerHTML = window.marked.parse(p.content)
     } else {
       body.textContent = p.content
     }
+    buildCatalog()
+    showCatalog(true)
+    showAbout(false)
   }
 
   function formatDate(d){
@@ -66,10 +70,104 @@
 
   function onHashChange(){
     const slug = decodeURIComponent(location.hash.replace('#',''))
-    if (slug) renderPost(slug); else renderList()
+    if (slug) renderPost(slug); else { document.body.classList.remove('detail-view'); renderList(); showCatalog(false); showAbout(true) }
+  }
+
+  function showCatalog(show){
+    const container = document.querySelector('.catalog-container')
+    if (!container) return
+    container.style.display = show ? '' : 'none'
+    if (!show) {
+      const root = document.getElementById('catalog-body')
+      if (root) root.innerHTML = ''
+    }
+  }
+
+  function showAbout(show){
+    const el = document.getElementById('about-section')
+    if (!el) return
+    el.style.display = show ? '' : 'none'
+  }
+
+  function slugify(text){
+    return String(text).trim().toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g,'')
+      .replace(/\s+/g,'-')
+      .slice(0,64)
+  }
+
+  function buildCatalog(){
+    const root = document.getElementById('catalog-body')
+    if (!root) return
+    root.innerHTML = ''
+    const headings = Array.from(document.querySelectorAll('#post-body h1, #post-body h2, #post-body h3, #post-body h4, #post-body h5, #post-body h6'))
+    headings.forEach((h,i)=>{
+      if (!h.id) {
+        const base = slugify(h.textContent||('section-'+i))
+        let id = base||('section-'+i)
+        let k = 1
+        while (document.getElementById(id)) { id = base+'-'+(k++) }
+        h.id = id
+      }
+      const li = document.createElement('li')
+      const level = (h.tagName||'H6').slice(1)
+      li.className = 'h'+level+'_nav'
+      const a = document.createElement('a')
+      a.href = '#'
+      a.dataset.targetId = h.id
+      a.textContent = h.textContent
+      li.appendChild(a)
+      root.appendChild(li)
+    })
+
+    const sidebar = document.getElementById('side-catalog')
+    if (!sidebar) return
+    const toggle = sidebar.querySelector('.catalog-toggle')
+    if (toggle) {
+      toggle.addEventListener('click', function(){ sidebar.classList.toggle('fold') })
+    }
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = entry.target.id
+        const link = root.querySelector('a[data-target-id="'+id+'"]')
+        if (!link) return
+        const li = link.parentElement
+        if (entry.isIntersecting) {
+          Array.from(root.children).forEach(x=>x.classList.remove('active'))
+          li.classList.add('active')
+        }
+      })
+    }, { rootMargin: '0px 0px -70% 0px', threshold: 0 })
+    headings.forEach(h=>obs.observe(h))
+
+    const fixedTop = sidebar.getBoundingClientRect().top + window.scrollY
+    function onScroll(){
+      if (window.innerWidth >= 1200) {
+        if (window.scrollY > fixedTop) sidebar.classList.add('fixed'); else sidebar.classList.remove('fixed')
+      } else {
+        sidebar.classList.remove('fixed')
+      }
+    }
+    window.addEventListener('scroll', onScroll)
+    onScroll()
+
+    root.addEventListener('click', function(e){
+      const a = e.target.closest('a')
+      if (!a) return
+      e.preventDefault()
+      const id = a.dataset.targetId
+      const el = document.getElementById(id)
+      if (!el) return
+      const top = el.getBoundingClientRect().top + window.scrollY - 70
+      window.scrollTo({ top, behavior: 'smooth' })
+    })
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+    document.body.classList.remove('detail-view')
+    showCatalog(false)
+    showAbout(true)
     fetchPosts().then(() => {
       onHashChange()
       window.addEventListener('hashchange', onHashChange)

@@ -2,7 +2,7 @@
 layout:  post
 title:   "2017年度计划"
 keywords: "年度计划,目标"
-description: "bazingafeng年度计划"
+description: "GaryFeng年度计划"
 date: 2017-02-12
 published: true
 catalog: true
