@@ -340,7 +340,7 @@ kubernetes-dashboard   NodePort   10.100.111.222   <none>        443:30001/TCP  
 
 获取token：
 ```
-[root@bazingafeng]# kubectl get secret -n kube-system|grep kubernetes-dashboard-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
+[root@GaryFeng]# kubectl get secret -n kube-system|grep kubernetes-dashboard-token|awk '{print $1}'|xargs kubectl -n kube-system describe secret
 Name:         kubernetes-dashboard-token-qsgvh
 Namespace:    kube-system
 Labels:       <none>

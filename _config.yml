@@ -1,11 +1,11 @@
 # Site settings
-title: Bazingafeng
-SEOTitle: Bazingafeng 的个人博客
+title: GaryFeng
+SEOTitle: GaryFeng 的个人博客
 header-img: img/home-bg.jpg
 email: fengh0409@gmail.com
-description: "冯辉个人博客 | 学习笔记, 技术分享, PHP Engineer, 专注于Web开发, 支持开源"
-keyword: "冯辉, Bazingafeng, 冯辉个人博客, Blog, PHP, Web服务器"
-url: "http://bazingafeng.com"              # your host, for absolute URL
+description: "fengh0409个人博客 | 学习笔记, 技术分享, Golang, Docker, Kubernetes"
+keyword: "fengh0409, GaryFeng, fengh0409个人博客, Blog, Golang, Docker, Kubernetes"
+url: "http://fengh0409.github.io"              # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 
@@ -47,7 +47,7 @@ kramdown:
 #disqus_username: _your_disqus_short_name_
 
 # Duoshuo settings
-#duoshuo_username: bazingafeng
+#duoshuo_username: GaryFeng
 # Share component is depend on Comment so we can NOT use share only.
 #duoshuo_share: true                     # set to false if you want to use Comment without Sharing
 
@@ -65,7 +65,7 @@ ga_domain: auto
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "Bazingafeng,Hello World开发攻城狮，技术栈:PHP+GO+DOCKER，擅长使用各种流行语言构建Hello World应用程序，写代码一定要查文档一定要Google一定要GitHub一定要Stack Overflow，现在杭州一家金融互联网公司敲键盘。"
+sidebar-about-description: "GaryFeng,Hello World开发攻城狮，技术栈:PHP+GO+DOCKER，擅长使用各种流行语言构建Hello World应用程序，写代码一定要查文档一定要Google一定要GitHub一定要Stack Overflow，现在杭州一家金融互联网公司敲键盘。"
 sidebar-avatar: /img/avatar-bazinga.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
@@ -73,16 +73,3 @@ sidebar-avatar: /img/avatar-bazinga.jpg      # use absolute URL, seeing it's use
 # Featured Tags
 featured-tags: true                     # whether or not using Feature-Tags
 featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
-
-
-
-# Friends
-#friends: [
-#    {
-#        title: "阮一峰",
-#        href: "http://www.ruanyifeng.com"
-#    },{
-#        title: "酷壳",
-#        href: "http://coolshell.cn"
-#    }
-#]

@@ -87,7 +87,7 @@ metadata:
   name: ingress-nginx
 spec:
   rules:
-  - host: bazingafeng.com
+  - host: fengh0409.github.io
     http:
       paths:
       - backend:
@@ -95,7 +95,7 @@ spec:
            servicePort: 80
 ```
 
-至此，ingress就部署完成了。配置hosts到Controller的PodIP，然后集群外访问bazingafeng.com就可以访问test服务了。**注意：因为官方的Ingress Controller默认并没有开启`hostNetwork`模式，所以这里hosts配置的是Controller的PodIP。但是考虑到Pod重新调度后其IP会更改，那么hosts配置也要同时更改，所以一般建议开启`hostNetwork`模式，使Controller监听宿主机的端口，这样配置hosts时只需要配置Pod所在的节点IP即可。有人会说，如果Pod重新调度到其他节点了，hosts配置不是也要改变吗？不错，这种情况下，我们可以通过nodeSelector指定Ingress Controller调度到某个节点。这样hosts配置就不用变了。**修改如下：
+至此，ingress就部署完成了。配置hosts到Controller的PodIP，然后集群外访问fengh0409.github.io就可以访问test服务了。**注意：因为官方的Ingress Controller默认并没有开启`hostNetwork`模式，所以这里hosts配置的是Controller的PodIP。但是考虑到Pod重新调度后其IP会更改，那么hosts配置也要同时更改，所以一般建议开启`hostNetwork`模式，使Controller监听宿主机的端口，这样配置hosts时只需要配置Pod所在的节点IP即可。有人会说，如果Pod重新调度到其他节点了，hosts配置不是也要改变吗？不错，这种情况下，我们可以通过nodeSelector指定Ingress Controller调度到某个节点。这样hosts配置就不用变了。**修改如下：
 ```
 ...
 nodeSelector:                   # 指定Ingress Controller调度到某个节点
