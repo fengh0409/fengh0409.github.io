@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "framework": "static",
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "css/**", "use": "@vercel/static" },
+    { "src": "js/**", "use": "@vercel/static" },
+    { "src": "img/**", "use": "@vercel/static" },
+    { "src": "fonts/**", "use": "@vercel/static" },
+    { "src": "data/**", "use": "@vercel/static" },
+    { "src": "404.html", "use": "@vercel/static" },
+    { "src": "tags.html", "use": "@vercel/static" },
+    { "src": "feed.xml", "use": "@vercel/static" }
+  ]
+}
+
